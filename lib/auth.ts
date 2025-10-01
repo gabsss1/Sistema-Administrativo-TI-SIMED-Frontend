@@ -1,3 +1,20 @@
+// Fetch con autenticación Basic Auth para APIs protegidas por usuario/contraseña
+export async function basicAuthenticatedFetch(url: string, options: RequestInit = {}) {
+  const user = process.env.NEXT_PUBLIC_API_USER;
+  const pass = process.env.NEXT_PUBLIC_API_PASS;
+  const basic = typeof window === "undefined"
+    ? Buffer.from(`${user}:${pass}`).toString("base64")
+    : btoa(`${user}:${pass}`);
+
+  return fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${basic}`,
+      ...options.headers,
+    },
+  });
+}
 export interface User {
   id: string
   email: string

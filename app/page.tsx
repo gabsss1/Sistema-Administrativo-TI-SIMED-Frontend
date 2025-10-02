@@ -22,55 +22,30 @@ export default function HomePage() {
       <main className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido al Panel de Administración</h2>
-            <p className="text-muted-foreground">Gestiona tu aplicación de forma sencilla</p>
+            <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido al Panel de Administración de TI</h2>
+            <p className="text-muted-foreground">Opciones Administrativas</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
+
+
             <Card className="hover:shadow-md transition-shadow">
+
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <LayoutDashboard className="h-5 w-5" />
-                  Dashboard
+                  Registro Base TI
                 </CardTitle>
-                <CardDescription>Vista general y estadísticas del sistema</CardDescription>
+                <CardDescription>Ingreso de data de clientes</CardDescription>
               </CardHeader>
+
               <CardContent>
                 <Button asChild className="w-full">
-                  <Link href="/dashboard">Ir al Dashboard</Link>
+                  <Link href="/registro-base-ti">Ir a Registro Base TI</Link>
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Usuarios
-                </CardTitle>
-                <CardDescription>Gestiona usuarios del sistema</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full">
-                  <Link href="/users">Gestionar Usuarios</Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Configuración
-                </CardTitle>
-                <CardDescription>Ajustes y configuración del sistema</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full">
-                  <Link href="/settings">Configurar</Link>
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>

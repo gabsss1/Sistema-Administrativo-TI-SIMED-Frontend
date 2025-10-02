@@ -9,19 +9,9 @@ import { useState } from "react"
 
 const navigation = [
   {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    name: "Usuarios",
-    href: "/users",
+    name: "Registros Base TI",
+    href: "/registro-base-ti",
     icon: Users,
-  },
-  {
-    name: "Configuración",
-    href: "/settings",
-    icon: Settings,
   },
 ]
 

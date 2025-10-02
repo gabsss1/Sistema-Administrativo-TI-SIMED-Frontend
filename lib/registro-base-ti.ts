@@ -56,14 +56,40 @@ export interface RegistroBaseTIDto {
   registro_base_id?: number;
   name_cliente: string;
   version: string;
-  area_medica: any;
+  area_medica_id: number; // ID del área médica
   equipo: string;
   status: boolean;
-  lis: any;
-  tipo_licencia: any;
-  modalidad: any;
-  provincia: any;
+  lis_id: number; // ID del LIS
+  licencia_id: number; // ID del tipo de licencia
+  modalidad_id: number; // ID de la modalidad
+  provincia_id: number; // ID de la provincia
   fecha_implentacion: string;
+}
+
+// Interfaces para las entidades relacionadas
+export interface AreaMedica {
+  area_medica_id: number;
+  area_medica_nombre: string;
+}
+
+export interface Lis {
+  lis_id: number;
+  lis_nombre: string;
+}
+
+export interface Modalidad {
+  modalidad_id: number;
+  modalidad_nombre: string;
+}
+
+export interface Provincia {
+  provincia_id: number;
+  provincia_nombre: string;
+}
+
+export interface TipoLicencia {
+  licencia_id: number;
+  tipo_licencia: string;
 }
 
 export async function getRegistroBaseTI() {
@@ -105,5 +131,36 @@ export async function deleteRegistroBaseTI(id: number) {
     method: "DELETE",
   });
   if (!response.ok) throw new Error("Error al eliminar registro base TI");
+  return response.json();
+}
+
+// Funciones para obtener datos de entidades relacionadas
+export async function getAreasMedicas() {
+  const response = await basicAuthenticatedFetch("/area-medica");
+  if (!response.ok) throw new Error("Error al obtener áreas médicas");
+  return response.json();
+}
+
+export async function getLis() {
+  const response = await basicAuthenticatedFetch("/lis");
+  if (!response.ok) throw new Error("Error al obtener LIS");
+  return response.json();
+}
+
+export async function getModalidades() {
+  const response = await basicAuthenticatedFetch("/modalidad");
+  if (!response.ok) throw new Error("Error al obtener modalidades");
+  return response.json();
+}
+
+export async function getProvincias() {
+  const response = await basicAuthenticatedFetch("/provincia");
+  if (!response.ok) throw new Error("Error al obtener provincias");
+  return response.json();
+}
+
+export async function getTiposLicencia() {
+  const response = await basicAuthenticatedFetch("/tipo-licencia");
+  if (!response.ok) throw new Error("Error al obtener tipos de licencia");
   return response.json();
 }

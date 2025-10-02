@@ -34,7 +34,7 @@ export function UsersTableNestJS() {
     setLoading(true)
     setError(null)
     try {
-      const data = await getUsers(searchTerm)
+      const data = await getUsers()
       setUsers(data)
     } catch (error) {
       console.error("Error loading users:", error)

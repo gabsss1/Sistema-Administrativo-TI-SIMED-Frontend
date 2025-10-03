@@ -46,8 +46,20 @@ export async function deleteUser(id: string) {
 
 // API functions para dashboard stats
 export async function getDashboardStats() {
-  const response = await basicAuthenticatedFetch("/dashboard/stats")
+  const response = await basicAuthenticatedFetch("/registro-base-ti/dashboard/stats")
   if (!response.ok) throw new Error("Error fetching dashboard stats")
+  return response.json()
+}
+
+export async function getLisMasUsados() {
+  const response = await basicAuthenticatedFetch("/registro-base-ti/dashboard/lis-mas-usados")
+  if (!response.ok) throw new Error("Error fetching LIS más usados")
+  return response.json()
+}
+
+export async function getLisPorRegiones() {
+  const response = await basicAuthenticatedFetch("/registro-base-ti/dashboard/lis-por-regiones")
+  if (!response.ok) throw new Error("Error fetching LIS por regiones")
   return response.json()
 }
 
@@ -63,7 +75,8 @@ export interface RegistroBaseTIDto {
   licencia_id: number; // ID del tipo de licencia
   modalidad_id: number; // ID de la modalidad
   provincia_id: number; // ID de la provincia
-  fecha_implentacion: string;
+  fecha_implentacion?: string; // Opcional, se envía solo si implementado = true
+  implementado?: boolean; // Campo para estado de implementación
 }
 
 // Interfaces para las entidades relacionadas
@@ -90,6 +103,27 @@ export interface Provincia {
 export interface TipoLicencia {
   licencia_id: number;
   tipo_licencia: string;
+}
+
+// Interfaces para Dashboard Analytics
+export interface DashboardStats {
+  total_registros: number;
+  implementados: number;
+  pendientes: number;
+}
+
+export interface LisMasUsado {
+  nombre: string;
+  cantidad: number;
+}
+
+export interface LisPorRegion {
+  region: string;
+  lis: {
+    nombre: string;
+    cantidad: number;
+  }[];
+  total: number;
 }
 
 export async function getRegistroBaseTI() {

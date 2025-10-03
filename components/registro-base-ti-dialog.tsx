@@ -7,6 +7,7 @@ import Swal from 'sweetalert2'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import {
     Dialog,
     DialogContent,
@@ -38,7 +39,7 @@ interface RegistroBaseTIDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     registroBaseTI: RegistroBaseTIDto | null
-    onRegistroBaseTISaved: () => void
+    onRegistroBaseTISaved: (isEditing?: boolean) => void
 }
 
 export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onRegistroBaseTISaved }: RegistroBaseTIDialogProps) {
@@ -63,6 +64,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
         licencia_id: "",
         modalidad_id: "",
         fecha_implentacion: "",
+        implementado: false,
     })
 
     // Cargar datos de las entidades relacionadas
@@ -116,6 +118,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 licencia_id: registroBaseTI.licencia_id?.toString() || "",
                 modalidad_id: registroBaseTI.modalidad_id?.toString() || "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion || "",
+                implementado: registroBaseTI.implementado ?? false,
             }
             
             setFormData(newFormData)
@@ -131,6 +134,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 licencia_id: "",
                 modalidad_id: "",
                 fecha_implentacion: "",
+                implementado: false,
             })
         }
     }, [registroBaseTI, open])
@@ -150,6 +154,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 licencia_id: registroBaseTI.licencia_id?.toString() || "",
                 modalidad_id: registroBaseTI.modalidad_id?.toString() || "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion || "",
+                implementado: registroBaseTI.implementado ?? false,
             }
             
             setFormData(newFormData)
@@ -171,15 +176,21 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 provincia_id: parseInt(formData.provincia_id) || 0,
                 licencia_id: parseInt(formData.licencia_id) || 0,
                 modalidad_id: parseInt(formData.modalidad_id) || 0,
-                fecha_implentacion: formData.fecha_implentacion,
+                implementado: formData.implementado,
             }
 
-            if (registroBaseTI && registroBaseTI.registro_base_id) {
+            // Solo incluir fecha_implentacion si está implementado
+            if (formData.implementado && formData.fecha_implentacion) {
+                dataToSend.fecha_implentacion = formData.fecha_implentacion
+            }
+
+            const isEditing = !!(registroBaseTI && registroBaseTI.registro_base_id)
+            if (isEditing && registroBaseTI?.registro_base_id) {
                 await updateRegistroBaseTI(registroBaseTI.registro_base_id, dataToSend)
             } else {
                 await createRegistroBaseTI(dataToSend)
             }
-            onRegistroBaseTISaved()
+            onRegistroBaseTISaved(isEditing)
         } catch (error) {
             console.error("Error saving registro base TI:", error)
             
@@ -194,7 +205,16 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
         }
     }
     const handleInputChange = (field: string, value: string | boolean) => {
-        setFormData((prev) => ({ ...prev, [field]: value }))
+        setFormData((prev) => {
+            const updated = { ...prev, [field]: value }
+            
+            // Si se desactiva "implementado", limpiar la fecha
+            if (field === "implementado" && value === false) {
+                updated.fecha_implentacion = ""
+            }
+            
+            return updated
+        })
     }
     
     // Debug: Estado actual del formulario (solo cuando hay opciones cargadas)
@@ -358,14 +378,36 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                             </Select>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
-                            <Label htmlFor="fecha_implentacion">Fecha de Implementación</Label>
+                            <Label htmlFor="fecha_implentacion">
+                                Fecha de Implementación
+                                {formData.implementado && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
                             <Input
                                 id="fecha_implentacion"
                                 type="date"
                                 value={formData.fecha_implentacion}
                                 onChange={(e) => handleInputChange("fecha_implentacion", e.target.value)}
-                                required
+                                disabled={!formData.implementado}
+                                required={formData.implementado}
+                                className={!formData.implementado ? "bg-gray-100 cursor-not-allowed" : ""}
                             />
+                            {!formData.implementado && (
+                                <p className="text-sm text-gray-500">
+                                    La fecha se habilitará cuando marques como "Implementado"
+                                </p>
+                            )}
+                        </div>
+                        <div className="grid gap-2 md:col-span-2">
+                            <div className="flex items-center space-x-2">
+                                <Switch
+                                    id="implementado"
+                                    checked={formData.implementado}
+                                    onCheckedChange={(checked) => handleInputChange("implementado", checked)}
+                                />
+                                <Label htmlFor="implementado">
+                                    {formData.implementado ? "Implementado" : "Pendiente"}
+                                </Label>
+                            </div>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <Label htmlFor="status">Estado</Label>
@@ -378,7 +420,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="active">Activo</SelectItem>
-                                    <SelectItem value="inactive">Inactivo</SelectItem>
+                                    <SelectItem value="inactive">Cerrado</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

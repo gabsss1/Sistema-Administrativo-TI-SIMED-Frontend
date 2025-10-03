@@ -13,6 +13,11 @@ const navigation = [
     href: "/registro-base-ti",
     icon: Users,
   },
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  }
 ]
 
 export function SimpleNavbar() {

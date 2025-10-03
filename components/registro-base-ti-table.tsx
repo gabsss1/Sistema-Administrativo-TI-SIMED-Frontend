@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback, Suspense, lazy } from "react"
 import Swal from 'sweetalert2'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +17,10 @@ import {
     getRegistroBaseTI, 
     deleteRegistroBaseTI 
 } from "@/lib/registro-base-ti"
-import { RegistroBaseTIDialog } from "./registro-base-ti-dialog"
+
+const RegistroBaseTIDialog = lazy(() => import("./registro-base-ti-dialog").then(module => ({
+    default: module.RegistroBaseTIDialog
+})))
 
 // Interfaz extendida para la tabla que puede recibir objetos poblados
 // El backend devuelve los datos con nombres de relaciones (area_medica, lis, provincia)
@@ -27,19 +30,35 @@ interface RegistroBaseTIWithRelations extends Omit<RegistroBaseTIDto, 'area_medi
   provincia: number | Provincia;
   modalidad: number | { modalidad_id: number; modalidad_nombre: string };
   tipo_licencia?: number | { licencia_id: number; tipo_licencia: string };
+  fecha_display?: string; // Campo que viene del backend para mostrar la fecha
 }
 
 export function RegistroBaseTITable() {
     const [registros, setRegistros] = useState<RegistroBaseTIWithRelations[]>([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
+    const [searchInput, setSearchInput] = useState("") // Para debouncing
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editingRegistro, setEditingRegistro] = useState<RegistroBaseTIDto | null>(null)
+    
+    // Estados para paginación
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage] = useState(5) // 5 registros por página
+
+    // Debouncing para la búsqueda
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSearchTerm(searchInput)
+            setCurrentPage(1)
+        }, 300)
+
+        return () => clearTimeout(timer)
+    }, [searchInput])
 
     useEffect(() => {
         loadRegistros()
     }, [])
-    const loadRegistros = async () => {
+    const loadRegistros = useCallback(async () => {
         setLoading(true)
         try {
             const data = await getRegistroBaseTI()
@@ -55,8 +74,8 @@ export function RegistroBaseTITable() {
         } finally {
             setLoading(false)
         }
-    }
-    const handleDelete = async (id: number) => {
+    }, [])
+    const handleDelete = useCallback(async (id: number) => {
         const result = await Swal.fire({
             title: '¿Estás seguro?',
             text: 'Esta acción no se puede deshacer',
@@ -72,7 +91,7 @@ export function RegistroBaseTITable() {
         if (result.isConfirmed) {
             try {
                 await deleteRegistroBaseTI(id)
-                setRegistros(registros.filter((registro) => registro.registro_base_id !== id))
+                setRegistros(prev => prev.filter((registro) => registro.registro_base_id !== id))
                 
                 Swal.fire({
                     title: '¡Eliminado!',
@@ -92,7 +111,8 @@ export function RegistroBaseTITable() {
                 })
             }
         }
-    }
+    }, [])
+    
     const handleEdit = (registro: RegistroBaseTIWithRelations) => {
         // Convertir las relaciones de objetos a IDs para el diálogo
         const editingData: RegistroBaseTIDto = {
@@ -117,6 +137,7 @@ export function RegistroBaseTITable() {
                 ? registro.modalidad.modalidad_id 
                 : (typeof registro.modalidad === 'number' ? registro.modalidad : 0),
             fecha_implentacion: registro.fecha_implentacion || "",
+            implementado: registro.implementado ?? false,
         }
         
         setEditingRegistro(editingData)
@@ -126,16 +147,17 @@ export function RegistroBaseTITable() {
         setEditingRegistro(null)
         setDialogOpen(true)
     }
-    const handleRegistroSaved = () => {
+    const handleRegistroSaved = (isEditing?: boolean) => {
         loadRegistros()
         setDialogOpen(false)
         
-        const isEditing = editingRegistro !== null
+        // Usar el parámetro que viene del diálogo, o como fallback el estado local
+        const wasEditing = isEditing !== undefined ? isEditing : (editingRegistro !== null)
         setEditingRegistro(null)
         
         Swal.fire({
             title: '¡Éxito!',
-            text: isEditing ? 'Registro actualizado correctamente.' : 'Registro creado correctamente.',
+            text: wasEditing ? 'Registro actualizado correctamente.' : 'Registro creado correctamente.',
             icon: 'success',
             timer: 2000,
             showConfirmButton: false,
@@ -143,11 +165,37 @@ export function RegistroBaseTITable() {
             toast: true
         })
     }
-    const filteredRegistros = registros.filter((registro) =>
-        registro.name_cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        registro.equipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        registro.version.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+
+    // Filtrar registros por término de búsqueda (optimizado con useMemo)
+    const filteredRegistros = useMemo(() => {
+        if (!searchTerm.trim()) return registros
+        
+        const searchLower = searchTerm.toLowerCase()
+        return registros.filter((registro) =>
+            registro.name_cliente.toLowerCase().includes(searchLower) ||
+            registro.equipo.toLowerCase().includes(searchLower) ||
+            registro.version.toLowerCase().includes(searchLower)
+        )
+    }, [registros, searchTerm])
+
+    // Calcular paginación (optimizado con useMemo)
+    const paginationData = useMemo(() => {
+        const totalItems = filteredRegistros.length
+        const totalPages = Math.ceil(totalItems / itemsPerPage)
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = startIndex + itemsPerPage
+        const paginatedRegistros = filteredRegistros.slice(startIndex, endIndex)
+        
+        return {
+            totalItems,
+            totalPages,
+            startIndex,
+            endIndex,
+            paginatedRegistros
+        }
+    }, [filteredRegistros, currentPage, itemsPerPage])
+
+
     return (
         <Card className="w-full">
             <CardHeader>
@@ -159,8 +207,8 @@ export function RegistroBaseTITable() {
                             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Buscar..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
                                 className="max-w-sm pl-8"
                             />
                         </div>
@@ -173,9 +221,20 @@ export function RegistroBaseTITable() {
             </CardHeader>
             <CardContent>
                 {loading ? (
-                    <div className="text-center text-muted-foreground">Cargando registros...</div>
+                    <div className="space-y-4">
+                        {/* Search skeleton */}
+                        <div className="h-10 bg-gray-200 rounded animate-pulse w-[300px]"></div>
+                        {/* Table skeleton */}
+                        <div className="space-y-2">
+                            <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                            ))}
+                        </div>
+                    </div>
                 ) : (
-                    <Table>
+                    <div>
+                        <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Cliente</TableHead>
@@ -186,12 +245,13 @@ export function RegistroBaseTITable() {
                                 <TableHead>Modalidad</TableHead>
                                 <TableHead>Provincia</TableHead>
                                 <TableHead>Fecha Implementación</TableHead>
+                                <TableHead>Implementación</TableHead>
                                 <TableHead>Estado</TableHead>
                                 <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredRegistros.map((registro) => (
+                            {paginationData.paginatedRegistros.map((registro) => (
                                 <TableRow key={registro.registro_base_id}>
                                     <TableCell>{registro.name_cliente}</TableCell>
                                     <TableCell>{registro.version}</TableCell>
@@ -217,13 +277,25 @@ export function RegistroBaseTITable() {
                                             : registro.provincia}
                                     </TableCell>
                                     <TableCell>
-                                        {registro.fecha_implentacion 
+                                        {(registro as any).fecha_display || 
+                                         (registro.fecha_implentacion 
                                             ? registro.fecha_implentacion.split('-').reverse().join('/')
-                                            : '-'}
+                                            : '-')}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge 
+                                            variant={registro.implementado ? "default" : "secondary"}
+                                            className={registro.implementado 
+                                                ? "bg-green-600 text-white hover:bg-green-700" 
+                                                : "bg-yellow-500 text-white hover:bg-yellow-600"
+                                            }
+                                        >
+                                            {registro.implementado ? "Implementado" : "Pendiente"}
+                                        </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={registro.status ? "default" : "secondary"}>
-                                            {registro.status ? "Activo" : "Inactivo"}
+                                            {registro.status ? "Activo" : "Cerrado"}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -249,14 +321,57 @@ export function RegistroBaseTITable() {
                             ))}
                         </TableBody>
                     </Table>
+                    
+                    {/* Controles de paginación */}
+                    {paginationData.totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-4">
+                            <div className="text-sm text-muted-foreground">
+                                Mostrando {paginationData.startIndex + 1} a {Math.min(paginationData.endIndex, paginationData.totalItems)} de {paginationData.totalItems} registros
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Anterior
+                                </Button>
+                                <div className="flex items-center space-x-1">
+                                    {Array.from({ length: paginationData.totalPages }, (_, i) => i + 1).map((page) => (
+                                        <Button
+                                            key={page}
+                                            variant={currentPage === page ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(page)}
+                                            className="min-w-8"
+                                        >
+                                            {page}
+                                        </Button>
+                                    ))}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(Math.min(paginationData.totalPages, currentPage + 1))}
+                                    disabled={currentPage === paginationData.totalPages}
+                                >
+                                    Siguiente
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                    </div>
                 )}
             </CardContent>
-            <RegistroBaseTIDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                registroBaseTI={editingRegistro}
-                onRegistroBaseTISaved={handleRegistroSaved}
-            />
+            <Suspense fallback={<div>Cargando...</div>}>
+                <RegistroBaseTIDialog
+                    open={dialogOpen}
+                    onOpenChange={setDialogOpen}
+                    registroBaseTI={editingRegistro}
+                    onRegistroBaseTISaved={handleRegistroSaved}
+                />
+            </Suspense>
         </Card>
     )
 }

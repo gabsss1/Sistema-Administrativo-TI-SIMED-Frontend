@@ -1,7 +1,50 @@
+"use client"
+
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Activity, TrendingUp, Settings } from "lucide-react"
+import { Users, Activity, TrendingUp, Settings, Database } from "lucide-react"
+import { 
+  getDashboardStats, 
+  getLis, 
+  getLisMasUsados, 
+  getLisPorRegiones,
+  type DashboardStats,
+  type LisMasUsado,
+  type LisPorRegion
+} from "@/lib/registro-base-ti"
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [lisCount, setLisCount] = useState<number>(0)
+  const [lisMasUsados, setLisMasUsados] = useState<LisMasUsado[]>([])
+  const [lisPorRegiones, setLisPorRegiones] = useState<LisPorRegion[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const loadDashboardData = useCallback(async () => {
+    try {
+      // Cargar todas las estadísticas en paralelo
+      const [dashboardStats, lisData, lisMasUsadosData, lisPorRegionesData] = await Promise.all([
+        getDashboardStats(),
+        getLis(),
+        getLisMasUsados(),
+        getLisPorRegiones()
+      ])
+
+      setStats(dashboardStats)
+      setLisCount(lisData.length || 0)
+      setLisMasUsados(lisMasUsadosData)
+      setLisPorRegiones(lisPorRegionesData)
+    } catch (error) {
+      console.error("Error loading dashboard data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
+
   return (
     <div className="space-y-6">
       <div>
@@ -13,113 +56,125 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Registros</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">+20.1% desde el mes pasado</p>
+            <div className="text-2xl font-bold">
+              {loading ? "..." : stats?.total_registros || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Registros en el sistema</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuarios Activos</CardTitle>
+            <CardTitle className="text-sm font-medium">Implementados</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">892</div>
-            <p className="text-xs text-muted-foreground">+12.5% desde el mes pasado</p>
+            <div className="text-2xl font-bold">
+              {loading ? "..." : stats?.implementados || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Sistemas implementados</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Crecimiento</CardTitle>
+            <CardTitle className="text-sm font-medium">Sistemas LIS</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? "..." : lisCount}
+            </div>
+            <p className="text-xs text-muted-foreground">LIS registrados</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+15.3%</div>
-            <p className="text-xs text-muted-foreground">+2.1% desde la semana pasada</p>
+            <div className="text-2xl font-bold">
+              {loading ? "..." : stats?.pendientes || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Por implementar</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Configuraciones</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">Configuraciones activas</p>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Actividad reciente */}
+      {/* Analytics */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Actividad Reciente</CardTitle>
-            <CardDescription>Últimas acciones en el sistema</CardDescription>
+            <CardTitle>LIS Más Usados</CardTitle>
+            <CardDescription>Sistemas más implementados</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Nuevo usuario registrado</p>
-                  <p className="text-xs text-muted-foreground">Hace 2 minutos</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-chart-2 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Configuración actualizada</p>
-                  <p className="text-xs text-muted-foreground">Hace 15 minutos</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-chart-3 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Usuario eliminado</p>
-                  <p className="text-xs text-muted-foreground">Hace 1 hora</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-chart-4 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Backup completado</p>
-                  <p className="text-xs text-muted-foreground">Hace 3 horas</p>
-                </div>
-              </div>
+              {loading ? (
+                <div className="text-sm text-muted-foreground">Cargando...</div>
+              ) : lisMasUsados.length > 0 ? (
+                lisMasUsados.slice(0, 5).map((lis, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${
+                        index === 0 ? 'bg-chart-1' : 
+                        index === 1 ? 'bg-chart-2' : 
+                        index === 2 ? 'bg-chart-3' : 
+                        index === 3 ? 'bg-chart-4' : 'bg-chart-5'
+                      }`}></div>
+                      <span className="text-sm font-medium">{lis.nombre}</span>
+                    </div>
+                    <span className="text-sm font-bold">{lis.cantidad}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground">No hay datos disponibles</div>
+              )}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Resumen del Sistema</CardTitle>
-            <CardDescription>Estado general de la aplicación</CardDescription>
+            <CardTitle>LIS por Regiones</CardTitle>
+            <CardDescription>Distribución de sistemas por provincias</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Estado del Servidor</span>
-                <span className="text-sm text-chart-2">Operativo</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Base de Datos</span>
-                <span className="text-sm text-chart-2">Conectada</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Último Backup</span>
-                <span className="text-sm text-muted-foreground">Hace 3 horas</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Uso de Memoria</span>
-                <span className="text-sm text-muted-foreground">68%</span>
-              </div>
+            <div className="space-y-4 max-h-80 overflow-y-auto">
+              {loading ? (
+                <div className="text-sm text-muted-foreground">Cargando...</div>
+              ) : lisPorRegiones.length > 0 ? (
+                lisPorRegiones.map((region, index) => (
+                  <div key={index} className="border-l-2 border-chart-1 pl-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">{region.region}</span>
+                      <span className="text-sm font-bold text-chart-1">{region.total}</span>
+                    </div>
+                    <div className="space-y-1">
+                      {region.lis.slice(0, 3).map((lis, lisIndex) => (
+                        <div key={lisIndex} className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>• {lis.nombre}</span>
+                          <span>{lis.cantidad}</span>
+                        </div>
+                      ))}
+                      {region.lis.length > 3 && (
+                        <div className="text-xs text-muted-foreground">
+                          +{region.lis.length - 3} más...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground">No hay datos disponibles</div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
+import { Plus } from "lucide-react"
 //importar desde el lib/ las apis
 import { 
     type RegistroBaseTIDto, 
@@ -42,6 +43,20 @@ interface RegistroBaseTIDialogProps {
     onRegistroBaseTISaved: (isEditing?: boolean) => void
 }
 
+const initialFormData = {
+    name_cliente: "",
+    version: "",
+    area_medica_ids: [""],
+    equipo: "",
+    status: true,
+    lis_id: "",
+    provincia_id: "",
+    licencia_id: "",
+    modalidad_id: "",
+    fecha_implentacion: "",
+    implementado: false,
+}
+
 export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onRegistroBaseTISaved }: RegistroBaseTIDialogProps) {
     const [loading, setLoading] = useState(false)
     const [loadingData, setLoadingData] = useState(false)
@@ -53,19 +68,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     const [provincias, setProvincias] = useState<Provincia[]>([])
     const [tiposLicencia, setTiposLicencia] = useState<TipoLicencia[]>([])
     
-    const [formData, setFormData] = useState({
-        name_cliente: "",
-        version: "",
-        area_medica_id: "",
-        equipo: "",
-        status: true,
-        lis_id: "",
-        provincia_id: "",
-        licencia_id: "",
-        modalidad_id: "",
-        fecha_implentacion: "",
-        implementado: false,
-    })
+    const [formData, setFormData] = useState(initialFormData)
 
     // Cargar datos de las entidades relacionadas
     useEffect(() => {
@@ -107,35 +110,28 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
 
     useEffect(() => {
         if (registroBaseTI) {
-            const newFormData = {
-                name_cliente: registroBaseTI.name_cliente || "",
-                version: registroBaseTI.version || "",
-                area_medica_id: registroBaseTI.area_medica_id?.toString() || "",
-                equipo: registroBaseTI.equipo || "",
-                status: registroBaseTI.status ?? true,
-                lis_id: registroBaseTI.lis_id?.toString() || "",
-                provincia_id: registroBaseTI.provincia_id?.toString() || "",
-                licencia_id: registroBaseTI.licencia_id?.toString() || "",
-                modalidad_id: registroBaseTI.modalidad_id?.toString() || "",
-                fecha_implentacion: registroBaseTI.fecha_implentacion || "",
-                implementado: registroBaseTI.implementado ?? false,
+            let area_medica_ids: string[] = [];
+            if (Array.isArray(registroBaseTI.area_medica_ids) && registroBaseTI.area_medica_ids.length > 0) {
+                area_medica_ids = registroBaseTI.area_medica_ids.map((id: number) => id.toString());
+            } else {
+                area_medica_ids = [""];
             }
-            
-            setFormData(newFormData)
-        } else {
             setFormData({
-                name_cliente: "",
-                version: "",
-                area_medica_id: "",
-                equipo: "",
-                status: true,
-                lis_id: "",
-                provincia_id: "",
-                licencia_id: "",
-                modalidad_id: "",
-                fecha_implentacion: "",
-                implementado: false,
-            })
+                ...initialFormData,
+                name_cliente: registroBaseTI.name_cliente ? String(registroBaseTI.name_cliente) : "",
+                version: registroBaseTI.version ? String(registroBaseTI.version) : "",
+                area_medica_ids,
+                equipo: registroBaseTI.equipo ? String(registroBaseTI.equipo) : "",
+                status: registroBaseTI.status ?? true,
+                lis_id: registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "",
+                provincia_id: registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "",
+                licencia_id: registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "",
+                modalidad_id: registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "",
+                fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
+                implementado: registroBaseTI.implementado ?? false,
+            });
+        } else {
+            setFormData(initialFormData)
         }
     }, [registroBaseTI, open])
 
@@ -143,21 +139,26 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     useEffect(() => {
         if (registroBaseTI && !loadingData && tiposLicencia.length > 0 && areasMedicas.length > 0) {
             // Re-establecer formData ahora que las opciones están cargadas
-            const newFormData = {
-                name_cliente: registroBaseTI.name_cliente || "",
-                version: registroBaseTI.version || "",
-                area_medica_id: registroBaseTI.area_medica_id?.toString() || "",
-                equipo: registroBaseTI.equipo || "",
-                status: registroBaseTI.status ?? true,
-                lis_id: registroBaseTI.lis_id?.toString() || "",
-                provincia_id: registroBaseTI.provincia_id?.toString() || "",
-                licencia_id: registroBaseTI.licencia_id?.toString() || "",
-                modalidad_id: registroBaseTI.modalidad_id?.toString() || "",
-                fecha_implentacion: registroBaseTI.fecha_implentacion || "",
-                implementado: registroBaseTI.implementado ?? false,
+            let area_medica_ids: string[] = [];
+            if (Array.isArray(registroBaseTI.area_medica_ids) && registroBaseTI.area_medica_ids.length > 0) {
+                area_medica_ids = registroBaseTI.area_medica_ids.map((id: number) => id.toString());
+            } else {
+                area_medica_ids = [""];
             }
-            
-            setFormData(newFormData)
+            setFormData({
+                ...initialFormData,
+                name_cliente: registroBaseTI.name_cliente ? String(registroBaseTI.name_cliente) : "",
+                version: registroBaseTI.version ? String(registroBaseTI.version) : "",
+                area_medica_ids,
+                equipo: registroBaseTI.equipo ? String(registroBaseTI.equipo) : "",
+                status: registroBaseTI.status ?? true,
+                lis_id: registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "",
+                provincia_id: registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "",
+                licencia_id: registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "",
+                modalidad_id: registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "",
+                fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
+                implementado: registroBaseTI.implementado ?? false,
+            });
         }
     }, [registroBaseTI, loadingData, tiposLicencia, areasMedicas, lisList, modalidades, provincias])
 
@@ -169,7 +170,6 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
             const dataToSend: RegistroBaseTIDto = {
                 name_cliente: formData.name_cliente,
                 version: formData.version,
-                area_medica_id: parseInt(formData.area_medica_id) || 0,
                 equipo: formData.equipo,
                 status: formData.status,
                 lis_id: parseInt(formData.lis_id) || 0,
@@ -177,6 +177,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 licencia_id: parseInt(formData.licencia_id) || 0,
                 modalidad_id: parseInt(formData.modalidad_id) || 0,
                 implementado: formData.implementado,
+                area_medica_ids: formData.area_medica_ids.filter(Boolean).map(id => parseInt(id)),
             }
 
             // Solo incluir fecha_implentacion si está implementado
@@ -204,7 +205,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
             setLoading(false)
         }
     }
-    const handleInputChange = (field: string, value: string | boolean) => {
+    const handleInputChange = (field: string, value: string | boolean | string[]) => {
         setFormData((prev) => {
             const updated = { ...prev, [field]: value }
             
@@ -222,7 +223,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
         console.log("=== ESTADO FINAL PARA DEBUGGING ===")
 
         console.log("Valores a buscar en Select:", {
-            area_medica_id: formData.area_medica_id,
+            // area_medica_id eliminado, solo area_medica_ids
             licencia_id: formData.licencia_id,
             lis_id: formData.lis_id,
             modalidad_id: formData.modalidad_id,
@@ -264,30 +265,57 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                                 placeholder="Versión"
                             />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="area_medica_id">Área Médica</Label>
-                            <Select
-                                key={`area_medica_${formData.area_medica_id}_${areasMedicas.length}`}
-                                value={formData.area_medica_id}
-                                onValueChange={(value) => {
-                                    console.log("Cambiando area_medica_id a:", value)
-                                    handleInputChange("area_medica_id", value)
-                                }}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Área Médica"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {areasMedicas.map((area) => (
-                                        <SelectItem key={area.area_medica_id} value={area.area_medica_id.toString()}>
-                                            {area.area_medica_nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="grid gap-2 col-span-1">
+                            <Label>Áreas Médicas</Label>
+                            <div className="space-y-2">
+                                <div className="max-h-40 overflow-y-auto space-y-1">
+                                    {areasMedicas.length > 0 ? (
+                                        <>
+                                            {formData.area_medica_ids.map((id, idx) => (
+                                                <div key={idx} className="flex gap-2 items-center">
+                                                <Select
+                                                    value={id}
+                                                    onValueChange={(value: string) => {
+                                                        const updated = [...formData.area_medica_ids];
+                                                        updated[idx] = value;
+                                                        handleInputChange("area_medica_ids", updated);
+                                                    }}
+                                                    disabled={loadingData}
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Área Médica"} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {areasMedicas.map((area) => (
+                                                            <SelectItem key={area.area_medica_id} value={area.area_medica_id.toString()}>
+                                                                {area.area_medica_nombre}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {formData.area_medica_ids.length > 1 && (
+                                                    <button type="button" className="text-xs text-red-500 hover:underline whitespace-nowrap" onClick={() => {
+                                                        const updated = formData.area_medica_ids.filter((_, i) => i !== idx);
+                                                        handleInputChange("area_medica_ids", updated);
+                                                    }}>Quitar</button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        </>
+                                    ) : (
+                                        <div className="text-sm text-muted-foreground">Cargando áreas médicas...</div>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                    onClick={() => handleInputChange("area_medica_ids", [...formData.area_medica_ids, ""]) }
+                                >
+                                    <Plus className="w-4 h-4" /> Agregar otra área médica
+                                </button>
+                            </div>
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid gap-2 col-span-1">
                             <Label htmlFor="equipo">Equipo</Label>
                             <Input
                                 id="equipo"

@@ -22,7 +22,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="site-name">Nombre del Sitio</Label>
-              <Input id="site-name" defaultValue="Admin Panel" />
+              <Input id="site-name" defaultValue="FAST-IT" />
             </div>
 
             <div className="grid gap-2">

@@ -68,7 +68,8 @@ export interface RegistroBaseTIDto {
   registro_base_id?: number;
   name_cliente: string;
   version: string;
-  area_medica_id: number; // ID del área médica
+  // area_medica_id: number; // Eliminado, solo se usa area_medica_ids
+  area_medica_ids?: number[]; // Agregado para permitir múltiples IDs de área médica
   equipo: string;
   status: boolean;
   lis_id: number; // ID del LIS
@@ -115,6 +116,7 @@ export interface DashboardStats {
 export interface LisMasUsado {
   nombre: string;
   cantidad: number;
+  porcentaje: number; // Added to match backend response
 }
 
 export interface LisPorRegion {

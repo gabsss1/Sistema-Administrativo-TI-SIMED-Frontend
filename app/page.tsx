@@ -22,7 +22,7 @@ export default function HomePage() {
       <main className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido al Panel de Administración de TI</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-2">Bienvenido al Panel de Administración de FAST-IT</h2>
             <p className="text-muted-foreground">Opciones Administrativas</p>
           </div>
 
@@ -59,6 +59,21 @@ export default function HomePage() {
                   <Link href="/dashboard">Ir a Dashboard</Link>
                 </Button>
               </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Gestionar Anydesk
+                </CardTitle>
+                <CardDescription>Proximamente</CardDescription>
+              </CardHeader>
+              {/* <CardContent>
+                <Button asChild className="w-full">
+                  <Link href="/settings">Ir a Configuración</Link>
+                </Button>
+              </CardContent> */}
             </Card>
 
           </div>

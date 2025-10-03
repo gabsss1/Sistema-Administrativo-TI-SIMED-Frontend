@@ -33,7 +33,7 @@ export function SimpleNavbar() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-foreground">Admin Panel</span>
+            <span className="font-semibold text-foreground">FAST-IT</span>
           </Link>
 
           {/* Desktop Navigation */}

@@ -7,7 +7,7 @@ import { Suspense } from "react"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Admin Panel",
+  title: "FAST-IT",
   description: "Panel administrativo moderno",
   generator: "v0.app",
 }

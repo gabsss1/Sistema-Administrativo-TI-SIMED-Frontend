@@ -27,13 +27,15 @@ import {
     type Modalidad,
     type Provincia,
     type TipoLicencia,
+    type Responsable,
     createRegistroBaseTI, 
     updateRegistroBaseTI,
     getAreasMedicas,
     getLis,
     getModalidades,
     getProvincias,
-    getTiposLicencia
+    getTiposLicencia,
+    getResponsables
 } from "@/lib/registro-base-ti"
 
 interface RegistroBaseTIDialogProps {
@@ -53,6 +55,9 @@ const initialFormData = {
     provincia_id: "",
     licencia_id: "",
     modalidad_id: "",
+    responsable_id: "",
+    numero_proyecto: "",
+    numero_licencia: "",
     fecha_implentacion: "",
     implementado: false,
 }
@@ -67,6 +72,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     const [modalidades, setModalidades] = useState<Modalidad[]>([])
     const [provincias, setProvincias] = useState<Provincia[]>([])
     const [tiposLicencia, setTiposLicencia] = useState<TipoLicencia[]>([])
+    const [responsables, setResponsables] = useState<Responsable[]>([])
     
     const [formData, setFormData] = useState(initialFormData)
 
@@ -76,12 +82,13 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
             const loadData = async () => {
                 setLoadingData(true)
                 try {
-                    const [areasData, lisData, modalidadesData, provinciasData, tiposData] = await Promise.all([
+                    const [areasData, lisData, modalidadesData, provinciasData, tiposData, responsablesData] = await Promise.all([
                         getAreasMedicas(),
                         getLis(),
                         getModalidades(),
                         getProvincias(),
-                        getTiposLicencia()
+                        getTiposLicencia(),
+                        getResponsables()
                     ])
                     
                     setAreasMedicas(areasData)
@@ -89,6 +96,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                     setModalidades(modalidadesData)
                     setProvincias(provinciasData)
                     setTiposLicencia(tiposData)
+                    setResponsables(responsablesData)
                     
 
                 } catch (error) {
@@ -127,6 +135,9 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 provincia_id: registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "",
                 licencia_id: registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "",
                 modalidad_id: registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "",
+                responsable_id: registroBaseTI.responsable_id !== undefined && registroBaseTI.responsable_id !== null ? String(registroBaseTI.responsable_id) : "",
+                numero_proyecto: registroBaseTI.numero_proyecto ? String(registroBaseTI.numero_proyecto) : "",
+                numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
                 implementado: registroBaseTI.implementado ?? false,
             });
@@ -156,11 +167,14 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 provincia_id: registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "",
                 licencia_id: registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "",
                 modalidad_id: registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "",
+                responsable_id: registroBaseTI.responsable_id !== undefined && registroBaseTI.responsable_id !== null ? String(registroBaseTI.responsable_id) : "",
+                numero_proyecto: registroBaseTI.numero_proyecto ? String(registroBaseTI.numero_proyecto) : "",
+                numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
                 implementado: registroBaseTI.implementado ?? false,
             });
         }
-    }, [registroBaseTI, loadingData, tiposLicencia, areasMedicas, lisList, modalidades, provincias])
+    }, [registroBaseTI, loadingData, tiposLicencia, areasMedicas, lisList, modalidades, provincias, responsables])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -176,6 +190,9 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 provincia_id: parseInt(formData.provincia_id) || 0,
                 licencia_id: parseInt(formData.licencia_id) || 0,
                 modalidad_id: parseInt(formData.modalidad_id) || 0,
+                responsable_id: parseInt(formData.responsable_id) || 0,
+                numero_proyecto: formData.numero_proyecto,
+                numero_licencia: formData.numero_licencia,
                 implementado: formData.implementado,
                 area_medica_ids: formData.area_medica_ids.filter(Boolean).map(id => parseInt(id)),
             }
@@ -227,8 +244,11 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
             licencia_id: formData.licencia_id,
             lis_id: formData.lis_id,
             modalidad_id: formData.modalidad_id,
-            provincia_id: formData.provincia_id
+            provincia_id: formData.provincia_id,
+            responsable_id: formData.responsable_id
         })
+        console.log("Form data completo:", formData)
+        console.log("registroBaseTI original:", registroBaseTI)
         console.log("===================================")
     }
     
@@ -404,6 +424,44 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                                     ))}
                                 </SelectContent>
                             </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="responsable_id">Responsable</Label>
+                            <Select
+                                key={`responsable_${formData.responsable_id}_${responsables.length}`}
+                                value={formData.responsable_id}
+                                onValueChange={(value) => handleInputChange("responsable_id", value)}
+                                disabled={loadingData}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Responsable"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {responsables.map((responsable) => (
+                                        <SelectItem key={responsable.responsable_id} value={responsable.responsable_id.toString()}>
+                                            {responsable.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="numero_proyecto">Número de Proyecto</Label>
+                            <Input
+                                id="numero_proyecto"
+                                value={formData.numero_proyecto}
+                                onChange={(e) => handleInputChange("numero_proyecto", e.target.value)}
+                                placeholder="Número de Proyecto"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="numero_licencia">Número de Licencia</Label>
+                            <Input
+                                id="numero_licencia"
+                                value={formData.numero_licencia}
+                                onChange={(e) => handleInputChange("numero_licencia", e.target.value)}
+                                placeholder="Número de Licencia"
+                            />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <Label htmlFor="fecha_implentacion">

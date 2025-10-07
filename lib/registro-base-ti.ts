@@ -76,6 +76,9 @@ export interface RegistroBaseTIDto {
   licencia_id: number; // ID del tipo de licencia
   modalidad_id: number; // ID de la modalidad
   provincia_id: number; // ID de la provincia
+  responsable_id: number; // ID del responsable
+  numero_proyecto: string; // Número del proyecto
+  numero_licencia: string; // Número de licencia
   fecha_implentacion?: string; // Opcional, se envía solo si implementado = true
   implementado?: boolean; // Campo para estado de implementación
 }
@@ -104,6 +107,11 @@ export interface Provincia {
 export interface TipoLicencia {
   licencia_id: number;
   tipo_licencia: string;
+}
+
+export interface Responsable {
+  responsable_id: number;
+  nombre: string;
 }
 
 // Interfaces para Dashboard Analytics
@@ -198,5 +206,11 @@ export async function getProvincias() {
 export async function getTiposLicencia() {
   const response = await basicAuthenticatedFetch("/tipo-licencia");
   if (!response.ok) throw new Error("Error al obtener tipos de licencia");
+  return response.json();
+}
+
+export async function getResponsables() {
+  const response = await basicAuthenticatedFetch("/responsable");
+  if (!response.ok) throw new Error("Error al obtener responsables");
   return response.json();
 }

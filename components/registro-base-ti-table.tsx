@@ -32,6 +32,7 @@ interface RegistroBaseTIWithRelations extends Omit<RegistroBaseTIDto, 'area_medi
   provincia: number | Provincia;
   modalidad: number | { modalidad_id: number; modalidad_nombre: string };
   tipo_licencia?: number | { licencia_id: number; tipo_licencia: string };
+  responsable?: number | { responsable_id: number; nombre: string };
   fecha_display?: string; // Campo que viene del backend para mostrar la fecha
 }
 
@@ -150,6 +151,11 @@ export function RegistroBaseTITable() {
             modalidad_id: typeof registro.modalidad === 'object' && registro.modalidad 
                 ? registro.modalidad.modalidad_id 
                 : (typeof registro.modalidad === 'number' ? registro.modalidad : 0),
+            responsable_id: (registro as any).responsable 
+                ? (typeof (registro as any).responsable === 'object' ? (registro as any).responsable.responsable_id : (registro as any).responsable)
+                : ((registro as any).responsable_id || 0),
+            numero_proyecto: (registro as any).numero_proyecto || "",
+            numero_licencia: (registro as any).numero_licencia || "",
             fecha_implentacion: registro.fecha_implentacion || "",
             implementado: registro.implementado ?? false,
         }

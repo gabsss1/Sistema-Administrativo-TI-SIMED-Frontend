@@ -2,12 +2,12 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LayoutDashboard, Users, Settings, LogOut, Menu, X } from "lucide-react"
+
+import { LayoutDashboard, Database, Calendar, Menu, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
-import { useAuth } from "@/hooks/use-auth"
+
 
 const navigation = [
   {
@@ -16,31 +16,32 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
-    name: "Usuarios",
-    href: "/users",
-    icon: Users,
+    name: "Registro Base TI",
+    href: "/registro-base-ti",
+    icon: Database,
   },
   {
-    name: "Configuración",
-    href: "/settings",
-    icon: Settings,
+    name: "Gestionar Guardias",
+    href: "/gestionar-guardias",
+    icon: Calendar,
   },
 ]
 
 export function AdminSidebar() {
   const pathname = usePathname()
-  const { user, signOut } = useAuth()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const handleSignOut = async () => {
-    await signOut()
-  }
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Mobile menu button - Posicionado en el header */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
-        <Button variant="outline" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="bg-background shadow-md"
+        >
           {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       </div>
@@ -58,7 +59,10 @@ export function AdminSidebar() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-sidebar-foreground">FAST-IT</span>
+            <div className="flex flex-col">
+              <span className="font-semibold text-sidebar-foreground">SIMED</span>
+              <span className="text-xs text-sidebar-foreground/60">Admin Panel</span>
+            </div>
           </div>
 
           {/* Navigation */}
@@ -86,28 +90,7 @@ export function AdminSidebar() {
             })}
           </nav>
 
-          {/* User section */}
-          <div className="p-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-3 mb-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder.svg" alt={user?.name} />
-                <AvatarFallback>
-                  {user?.name
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("") || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name || "Usuario"}</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">{user?.email || "email@example.com"}</p>
-              </div>
-            </div>
-            <Button variant="outline" size="sm" className="w-full justify-start bg-transparent" onClick={handleSignOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Cerrar Sesión
-            </Button>
-          </div>
+
         </div>
       </div>
 

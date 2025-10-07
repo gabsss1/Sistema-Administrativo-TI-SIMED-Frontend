@@ -18,12 +18,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
-    // Check for stored user on mount
-    const storedUser = getStoredUser()
+    // Always authenticate without login - simplified for internal use
+    const defaultUser = {
+      id: "1",
+      email: "admin@simed.com",
+      name: "Administrador SIMED",
+      role: "admin" as const,
+    }
+    
     setState({
-      user: storedUser,
+      user: defaultUser,
       isLoading: false,
-      isAuthenticated: !!storedUser,
+      isAuthenticated: true,
     })
   }, [])
 

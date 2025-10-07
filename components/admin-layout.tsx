@@ -12,7 +12,7 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isLoading } = useAuth()
 
   if (isLoading) {
     return (
@@ -25,15 +25,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     )
   }
 
-  if (!isAuthenticated) {
-    return <LoginForm />
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <AdminSidebar />
       <div className="lg:pl-64">
-        <main className="p-6 lg:p-8">{children}</main>
+        {/* Header móvil con espacio para el botón hamburguesa */}
+        <div className="lg:hidden h-16 flex items-center bg-background border-b border-border px-4">
+          <div className="w-10"></div> {/* Espacio para el botón hamburguesa */}
+          <h1 className="text-lg font-semibold flex-1 text-center">SIMED Admin Panel</h1>
+          <div className="w-10"></div> {/* Balance visual */}
+        </div>
+        <main className="p-4 lg:p-8">{children}</main>
       </div>
     </div>
   )

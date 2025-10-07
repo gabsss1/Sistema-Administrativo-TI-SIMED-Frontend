@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-import { SimpleLayout } from "@/components/simple-layout"
+import { AdminLayout } from "@/components/admin-layout"
 
 export default function RegistroBaseTILayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    return <SimpleLayout>{children}</SimpleLayout>
+    return <AdminLayout>{children}</AdminLayout>
 }

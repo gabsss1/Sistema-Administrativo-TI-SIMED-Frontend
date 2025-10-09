@@ -6,7 +6,10 @@ export async function basicAuthenticatedFetch(url: string, options: RequestInit 
     ? Buffer.from(`${user}:${pass}`).toString("base64")
     : btoa(`${user}:${pass}`);
 
-  return fetch(`${API_BASE_URL}${url}`, {
+  const fullUrl = `${API_BASE_URL}${url}`;
+  console.log('🔗 Petición:', fullUrl);
+
+  const response = await fetch(fullUrl, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -14,6 +17,10 @@ export async function basicAuthenticatedFetch(url: string, options: RequestInit 
       ...options.headers,
     },
   });
+
+  console.log('📊 Status:', response.status, response.statusText);
+  
+  return response;
 }
 export interface User {
   id: string

@@ -59,6 +59,7 @@ const initialFormData = {
     numero_proyecto: "",
     numero_licencia: "",
     fecha_implentacion: "",
+    codigo_centro: "",
     implementado: false,
 }
 
@@ -118,6 +119,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
 
     useEffect(() => {
         if (registroBaseTI) {
+            console.log('✏️ Abriendo diálogo de edición con registroBaseTI:', registroBaseTI);
             let area_medica_ids: string[] = [];
             if (Array.isArray(registroBaseTI.area_medica_ids) && registroBaseTI.area_medica_ids.length > 0) {
                 area_medica_ids = registroBaseTI.area_medica_ids.map((id: number) => id.toString());
@@ -139,6 +141,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 numero_proyecto: registroBaseTI.numero_proyecto ? String(registroBaseTI.numero_proyecto) : "",
                 numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
+                codigo_centro: registroBaseTI.codigo_centro ? String(registroBaseTI.codigo_centro) : "",
                 implementado: registroBaseTI.implementado ?? false,
             });
         } else {
@@ -171,6 +174,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 numero_proyecto: registroBaseTI.numero_proyecto ? String(registroBaseTI.numero_proyecto) : "",
                 numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
+                codigo_centro: registroBaseTI.codigo_centro ? String(registroBaseTI.codigo_centro) : "",
                 implementado: registroBaseTI.implementado ?? false,
             });
         }
@@ -193,6 +197,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 responsable_id: parseInt(formData.responsable_id) || 0,
                 numero_proyecto: formData.numero_proyecto,
                 numero_licencia: formData.numero_licencia,
+                codigo_centro: formData.codigo_centro || undefined,
                 implementado: formData.implementado,
                 area_medica_ids: formData.area_medica_ids.filter(Boolean).map(id => parseInt(id)),
             }
@@ -452,6 +457,15 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                                 value={formData.numero_proyecto}
                                 onChange={(e) => handleInputChange("numero_proyecto", e.target.value)}
                                 placeholder="Número de Proyecto"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="codigo_centro">Código Centro</Label>
+                            <Input
+                                id="codigo_centro"
+                                value={formData.codigo_centro}
+                                onChange={(e) => handleInputChange("codigo_centro", e.target.value)}
+                                placeholder="Código Centro"
                             />
                         </div>
                         <div className="grid gap-2">

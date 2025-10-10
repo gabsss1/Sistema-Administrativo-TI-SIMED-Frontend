@@ -65,6 +65,7 @@ export function RegistroBaseTITable() {
         setLoading(true)
         try {
             const data = await getRegistroBaseTI()
+            console.log('📥 Registros recibidos (loadRegistros):', data)
             setRegistros(data)
         } catch (error) {
             console.error("Error loading registros:", error)
@@ -157,6 +158,7 @@ export function RegistroBaseTITable() {
             numero_proyecto: (registro as any).numero_proyecto || "",
             numero_licencia: (registro as any).numero_licencia || "",
             fecha_implentacion: registro.fecha_implentacion || "",
+            codigo_centro: (registro as any).codigo_centro || "",
             implementado: registro.implementado ?? false,
         }
         
@@ -291,6 +293,7 @@ export function RegistroBaseTITable() {
                                 <TableHead>LIS</TableHead>
                                 <TableHead>Modalidad</TableHead>
                                 <TableHead>Provincia</TableHead>
+                                <TableHead>Código Centro</TableHead>
                                 <TableHead>Fecha Implementación</TableHead>
                                 <TableHead>Implementación</TableHead>
                                 <TableHead>Estado</TableHead>
@@ -325,6 +328,7 @@ export function RegistroBaseTITable() {
                                             ? registro.provincia.provincia_nombre 
                                             : registro.provincia}
                                     </TableCell>
+                                    <TableCell>{registro.codigo_centro || '-'}</TableCell>
                                     <TableCell>
                                         {(registro as any).fecha_display || 
                                          (registro.fecha_implentacion 

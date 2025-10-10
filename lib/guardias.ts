@@ -115,3 +115,94 @@ export async function descargarExcelGuardias(year: number, month: number) {
   window.URL.revokeObjectURL(url)
   document.body.removeChild(a)
 }
+
+// Estadísticas de guardias por responsable (estructura del backend)
+export interface ResponsableMasActivo {
+  nombre: string
+  cantidad: number
+}
+
+export interface ResumenGuardias {
+  total_guardias: number
+  asignadas: number
+  completadas: number
+  canceladas: number
+}
+
+export interface EstadisticasBackend {
+  resumen: ResumenGuardias
+  responsables_mas_activos: ResponsableMasActivo[]
+}
+
+// Estructura adaptada para el componente
+export interface EstadisticasResponsable {
+  responsable_id?: number
+  nombre: string
+  total_guardias: number
+  guardias_completadas?: number
+  guardias_asignadas?: number
+  guardias_canceladas?: number
+}
+
+export interface EstadisticasPorMes {
+  year: number
+  month: number
+  responsables: EstadisticasResponsable[]
+  resumen?: ResumenGuardias
+}
+
+export async function getEstadisticasGuardiasPorMes(year: number, month: number): Promise<EstadisticasPorMes> {
+  try {
+    const response = await basicAuthenticatedFetch(`/guardia/estadisticas?year=${year}&month=${month}`)
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.warn('⚠️ Endpoint de estadísticas no implementado aún en el backend');
+        return { year, month, responsables: [] };
+      }
+      console.error('❌ Error obteniendo estadísticas de guardias:', response.status, response.statusText);
+      throw new Error(`Error obteniendo estadísticas: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: EstadisticasBackend = await response.json();
+    console.log('📊 Estadísticas de guardias obtenidas:', data);
+    
+    // Validar estructura de respuesta
+    if (!data || typeof data !== 'object') {
+      console.warn('⚠️ Respuesta de estadísticas tiene formato inválido');
+      return { year, month, responsables: [] };
+    }
+    
+    console.log('🔍 Datos recibidos del backend:', JSON.stringify(data, null, 2));
+    
+    // Adaptar la estructura del backend a nuestro formato
+    const responsablesAdaptados: EstadisticasResponsable[] = data.responsables_mas_activos?.map((resp) => ({
+      nombre: resp.nombre,
+      total_guardias: resp.cantidad,
+      // Por ahora no tenemos desglose detallado por estado desde el backend
+      guardias_asignadas: 0,
+      guardias_completadas: 0,
+      guardias_canceladas: 0,
+    })) || [];
+    
+    const resultado = {
+      year,
+      month,
+      responsables: responsablesAdaptados,
+      resumen: data.resumen || {
+        total_guardias: 0,
+        asignadas: 0,
+        completadas: 0,
+        canceladas: 0
+      }
+    };
+    
+    console.log('📋 Datos adaptados para el componente:', JSON.stringify(resultado, null, 2));
+    
+    return resultado;
+  } catch (error) {
+    console.error('❌ Error en getEstadisticasGuardiasPorMes:', error);
+    // Devolver estructura vacía en lugar de lanzar error
+    return { year, month, responsables: [] };
+  }
+}

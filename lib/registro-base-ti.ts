@@ -79,7 +79,8 @@ export interface RegistroBaseTIDto {
   responsable_id: number; // ID del responsable
   numero_proyecto: string; // Número del proyecto
   numero_licencia: string; // Número de licencia
-  fecha_implentacion?: string; // Opcional, se envía solo si implementado = true
+  fecha_implentacion?: string | null; // Opcional, se envía solo si implementado = true
+  codigo_centro?: string; // Nuevo campo agregado en backend
   implementado?: boolean; // Campo para estado de implementación
 }
 
@@ -112,6 +113,28 @@ export interface TipoLicencia {
 export interface Responsable {
   responsable_id: number;
   nombre: string;
+}
+
+// Estructura que puede venir del backend para RegistroBaseTI completo
+export interface RegistroBaseTI {
+  registro_base_id: number;
+  name_cliente: string;
+  version: string;
+  area_medicas?: AreaMedica[];
+  equipo: string;
+  status: boolean;
+  lis?: Lis;
+  tipo_licencia?: TipoLicencia;
+  modalidad?: Modalidad;
+  provincia?: Provincia;
+  responsable?: Responsable;
+  numero_proyecto?: string;
+  numero_licencia?: string;
+  codigo_centro?: string;
+  fecha_implentacion?: string | null;
+  implementado?: boolean;
+  // Getter dual que el backend puede exponer
+  fecha_display?: string;
 }
 
 // Interfaces para Dashboard Analytics

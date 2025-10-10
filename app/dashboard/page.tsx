@@ -14,6 +14,7 @@ import {
 } from "@/lib/registro-base-ti"
 import PieChart from "@/components/pie-chart"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { DashboardGuardiasStats } from "@/components/dashboard-guardias-stats"
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -192,6 +193,9 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Estadísticas de Guardias */}
+      <DashboardGuardiasStats />
     </div>
   )
 }

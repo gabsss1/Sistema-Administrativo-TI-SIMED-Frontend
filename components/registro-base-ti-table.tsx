@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react"
+import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Layers } from "lucide-react"
 import { 
     type RegistroBaseTIDto, 
     type AreaMedica,
@@ -18,9 +18,11 @@ import {
     deleteRegistroBaseTI 
 } from "@/lib/registro-base-ti"
 
+
 const RegistroBaseTIDialog = lazy(() => import("./registro-base-ti-dialog").then(module => ({
     default: module.RegistroBaseTIDialog
 })))
+
 
 // Interfaz extendida para la tabla que puede recibir objetos poblados
 // El backend devuelve los datos con nombres de relaciones (area_medica, lis, provincia)
@@ -169,6 +171,8 @@ export function RegistroBaseTITable() {
         setEditingRegistro(null)
         setDialogOpen(true)
     }
+
+
     const handleRegistroSaved = (isEditing?: boolean) => {
         loadRegistros()
         setDialogOpen(false)
@@ -363,10 +367,17 @@ export function RegistroBaseTITable() {
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     Editar
                                                 </DropdownMenuItem>
+
                                                 <DropdownMenuItem onClick={() => handleDelete(registro.registro_base_id!)}>
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     Eliminar
                                                 </DropdownMenuItem>
+
+                                                <DropdownMenuItem>
+                                                    <Layers className="mr-2 h-4 w-4" />
+                                                    Adicionales
+                                                </DropdownMenuItem>
+
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>

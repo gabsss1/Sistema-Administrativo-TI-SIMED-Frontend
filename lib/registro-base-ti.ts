@@ -66,10 +66,7 @@ export async function getLisPorRegiones() {
 // CRUD RegistroBaseTI
 export interface RegistroBaseTIDto {
   registro_base_id?: number;
-  name_cliente: string;
   version: string;
-  // area_medica_id: number; // Eliminado, solo se usa area_medica_ids
-  area_medica_ids?: number[]; // Agregado para permitir múltiples IDs de área médica
   equipo: string;
   status: boolean;
   lis_id: number; // ID del LIS
@@ -82,12 +79,22 @@ export interface RegistroBaseTIDto {
   fecha_implentacion?: string | null; // Opcional, se envía solo si implementado = true
   codigo_centro?: string; // Nuevo campo agregado en backend
   implementado?: boolean; // Campo para estado de implementación
+  // Compatibilidad: nombre de cliente antiguo
+  name_cliente?: string;
+  // Nuevo/actual: enviar hospital_id y area_medica_id (IDs únicos)
+  hospital_id?: number;
+  area_medica_id?: number;
 }
 
 // Interfaces para las entidades relacionadas
 export interface AreaMedica {
   area_medica_id: number;
   area_medica_nombre: string;
+}
+
+export interface Hospital {
+  hospital_id: number;
+  hospital_nombre: string;
 }
 
 export interface Lis {
@@ -118,14 +125,9 @@ export interface Responsable {
 // Estructura que puede venir del backend para RegistroBaseTI completo
 export interface RegistroBaseTI {
   registro_base_id: number;
-  name_cliente: string;
-  version: string;
-  area_medicas?: AreaMedica[];
-  equipo: string;
-  status: boolean;
+  // Mantener name_cliente por compatibilidad, pero el nuevo campo es 'hospitales'
+  name_cliente?: string;
   lis?: Lis;
-  tipo_licencia?: TipoLicencia;
-  modalidad?: Modalidad;
   provincia?: Provincia;
   responsable?: Responsable;
   numero_proyecto?: string;
@@ -214,6 +216,13 @@ export async function getLis() {
   return response.json();
 }
 
+export async function getHospitales() {
+  // Asumo endpoint plural /hospitales. Si el backend usa otro path, actualizar aquí.
+  const response = await basicAuthenticatedFetch("/hospitales");
+  if (!response.ok) throw new Error("Error al obtener hospitales");
+  return response.json();
+}
+
 export async function getModalidades() {
   const response = await basicAuthenticatedFetch("/modalidad");
   if (!response.ok) throw new Error("Error al obtener modalidades");
@@ -236,4 +245,78 @@ export async function getResponsables() {
   const response = await basicAuthenticatedFetch("/responsable");
   if (!response.ok) throw new Error("Error al obtener responsables");
   return response.json();
+}
+
+// Buscar registros por LIS y lista de módulos en el servidor
+export async function searchRegistroByLisAndModulos(lis_id: number, modulo_ids: number[]) {
+  const response = await basicAuthenticatedFetch(`/registro-base-ti/search`, {
+    method: 'POST',
+    body: JSON.stringify({ lis_id, modulo_ids }),
+  })
+  if (!response.ok) {
+    const text = await response.text()
+    console.error('Error searchRegistroByLisAndModulos', response.status, text)
+    throw new Error('Error al buscar registros por LIS y módulos')
+  }
+  return response.json()
+}
+
+// Módulos: se pueden filtrar por lis y área médica
+export interface Modulo {
+  modulo_id: number;
+  nombre: string;
+  lis?: Lis;
+  area_medica?: AreaMedica;
+}
+
+export async function getModulos(lis_id?: number) {
+  const params = new URLSearchParams()
+  if (lis_id) params.append('lis_id', String(lis_id))
+
+  const url = params.toString() ? `/modulos?${params.toString()}` : `/modulos`
+  const response = await basicAuthenticatedFetch(url)
+  if (!response.ok) throw new Error('Error al obtener módulos')
+  return response.json()
+}
+
+export async function getModulosForRegistro(registro_base_id: number) {
+  const response = await basicAuthenticatedFetch(`/registro-base-ti/${registro_base_id}/modulos`)
+  if (!response.ok) throw new Error('Error al obtener módulos del registro')
+  return response.json()
+}
+
+export async function assignModulosToRegistro(registro_base_id: number, modulo_ids: number[]) {
+  // Try POST first (controller supports POST), fallback to PUT if server responds 404
+  const url = `/registro-base-ti/${registro_base_id}/modulos`
+  // attempt POST
+  let response = await basicAuthenticatedFetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ modulo_ids })
+  })
+
+  if (!response.ok && response.status === 404) {
+    // fallback to PUT for clients that use PUT
+    response = await basicAuthenticatedFetch(url, {
+      method: 'PUT',
+      body: JSON.stringify({ modulo_ids })
+    })
+  }
+
+  if (!response.ok) {
+    const text = await response.text()
+    console.error('assignModulos error', response.status, text)
+    throw new Error('Error al asignar módulos')
+  }
+
+  return response.json()
+}
+
+export async function getRegistroBaseTIWithModulos() {
+  const response = await basicAuthenticatedFetch('/registro-base-ti/with-modulos')
+  if (!response.ok) {
+    const text = await response.text()
+    console.error('Error getRegistroBaseTIWithModulos', response.status, text)
+    throw new Error('Error al obtener registros con módulos')
+  }
+  return response.json()
 }

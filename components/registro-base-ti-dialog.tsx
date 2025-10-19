@@ -28,6 +28,7 @@ import {
     type Provincia,
     type TipoLicencia,
     type Responsable,
+    type Hospital,
     createRegistroBaseTI, 
     updateRegistroBaseTI,
     getAreasMedicas,
@@ -35,7 +36,8 @@ import {
     getModalidades,
     getProvincias,
     getTiposLicencia,
-    getResponsables
+    getResponsables,
+    getHospitales
 } from "@/lib/registro-base-ti"
 
 interface RegistroBaseTIDialogProps {
@@ -46,9 +48,9 @@ interface RegistroBaseTIDialogProps {
 }
 
 const initialFormData = {
-    name_cliente: "",
+    hospital_id: "",
     version: "",
-    area_medica_ids: [""],
+    area_medica_id: "",
     equipo: "",
     status: true,
     lis_id: "",
@@ -70,6 +72,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     // Estados para los datos de las entidades relacionadas
     const [areasMedicas, setAreasMedicas] = useState<AreaMedica[]>([])
     const [lisList, setLisList] = useState<Lis[]>([])
+    const [hospitalesList, setHospitalesList] = useState<Hospital[]>([])
     const [modalidades, setModalidades] = useState<Modalidad[]>([])
     const [provincias, setProvincias] = useState<Provincia[]>([])
     const [tiposLicencia, setTiposLicencia] = useState<TipoLicencia[]>([])
@@ -98,6 +101,14 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                     setProvincias(provinciasData)
                     setTiposLicencia(tiposData)
                     setResponsables(responsablesData)
+
+                    // Cargar hospitales aparte (puede fallar sin bloquear el diálogo)
+                        try {
+                            const hosp = await getHospitales()
+                            setHospitalesList(hosp)
+                        } catch (err) {
+                            console.warn('No se pudieron cargar hospitales', err)
+                        }
                     
 
                 } catch (error) {
@@ -120,17 +131,15 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     useEffect(() => {
         if (registroBaseTI) {
             console.log('✏️ Abriendo diálogo de edición con registroBaseTI:', registroBaseTI);
-            let area_medica_ids: string[] = [];
-            if (Array.isArray(registroBaseTI.area_medica_ids) && registroBaseTI.area_medica_ids.length > 0) {
-                area_medica_ids = registroBaseTI.area_medica_ids.map((id: number) => id.toString());
-            } else {
-                area_medica_ids = [""];
-            }
+            // area_medica ahora es un campo único; se procesa más abajo
+            // Preparar hospital y area_medica si vienen
+            const hospital_id = (registroBaseTI as any).hospitales ? String(((registroBaseTI as any).hospitales[0]?.hospital_id) || ((registroBaseTI as any).hospitales as any)?.hospital_id || "") : ((registroBaseTI as any).hospital_id ? String((registroBaseTI as any).hospital_id) : "")
+            const area_medica_id = (registroBaseTI as any).area_medica_ids && Array.isArray((registroBaseTI as any).area_medica_ids) && (registroBaseTI as any).area_medica_ids.length > 0 ? String((registroBaseTI as any).area_medica_ids[0]) : ((registroBaseTI as any).area_medica_id ? String((registroBaseTI as any).area_medica_id) : "")
             setFormData({
                 ...initialFormData,
-                name_cliente: registroBaseTI.name_cliente ? String(registroBaseTI.name_cliente) : "",
+                hospital_id,
                 version: registroBaseTI.version ? String(registroBaseTI.version) : "",
-                area_medica_ids,
+                area_medica_id,
                 equipo: registroBaseTI.equipo ? String(registroBaseTI.equipo) : "",
                 status: registroBaseTI.status ?? true,
                 lis_id: registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "",
@@ -153,17 +162,13 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     useEffect(() => {
         if (registroBaseTI && !loadingData && tiposLicencia.length > 0 && areasMedicas.length > 0) {
             // Re-establecer formData ahora que las opciones están cargadas
-            let area_medica_ids: string[] = [];
-            if (Array.isArray(registroBaseTI.area_medica_ids) && registroBaseTI.area_medica_ids.length > 0) {
-                area_medica_ids = registroBaseTI.area_medica_ids.map((id: number) => id.toString());
-            } else {
-                area_medica_ids = [""];
-            }
+            const hospital_id = (registroBaseTI as any).hospitales ? String(((registroBaseTI as any).hospitales[0]?.hospital_id) || ((registroBaseTI as any).hospitales as any)?.hospital_id || "") : ((registroBaseTI as any).hospital_id ? String((registroBaseTI as any).hospital_id) : "")
+            const area_medica_id = (registroBaseTI as any).area_medica_ids && Array.isArray((registroBaseTI as any).area_medica_ids) && (registroBaseTI as any).area_medica_ids.length > 0 ? String((registroBaseTI as any).area_medica_ids[0]) : ((registroBaseTI as any).area_medica_id ? String((registroBaseTI as any).area_medica_id) : "")
             setFormData({
                 ...initialFormData,
-                name_cliente: registroBaseTI.name_cliente ? String(registroBaseTI.name_cliente) : "",
+                hospital_id,
                 version: registroBaseTI.version ? String(registroBaseTI.version) : "",
-                area_medica_ids,
+                area_medica_id,
                 equipo: registroBaseTI.equipo ? String(registroBaseTI.equipo) : "",
                 status: registroBaseTI.status ?? true,
                 lis_id: registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "",
@@ -186,7 +191,6 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
         try {
             // Convertir los strings a números para enviar al backend
             const dataToSend: RegistroBaseTIDto = {
-                name_cliente: formData.name_cliente,
                 version: formData.version,
                 equipo: formData.equipo,
                 status: formData.status,
@@ -199,7 +203,14 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 numero_licencia: formData.numero_licencia,
                 codigo_centro: formData.codigo_centro || undefined,
                 implementado: formData.implementado,
-                area_medica_ids: formData.area_medica_ids.filter(Boolean).map(id => parseInt(id)),
+            }
+
+            // Incluir hospital_id y area_medica_id si están presentes
+            if ((formData as any).hospital_id) {
+                (dataToSend as any).hospital_id = parseInt((formData as any).hospital_id)
+            }
+            if ((formData as any).area_medica_id) {
+                (dataToSend as any).area_medica_id = parseInt((formData as any).area_medica_id)
             }
 
             // Solo incluir fecha_implentacion si está implementado
@@ -271,14 +282,24 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
                         <div className="grid gap-2">
-                            <Label htmlFor="name_cliente">Nombre del Cliente</Label>
-                            <Input
-                                id="name_cliente"
-                                value={formData.name_cliente}
-                                onChange={(e) => handleInputChange("name_cliente", e.target.value)}
-                                required
-                                placeholder="Nombre del Cliente"
-                            />
+                            <Label htmlFor="hospital_id">Hospital / Cliente</Label>
+                            <Select
+                                key={`hospital_${formData.hospital_id}_${hospitalesList.length}`}
+                                value={formData.hospital_id}
+                                onValueChange={(value) => handleInputChange("hospital_id", value)}
+                                disabled={loadingData}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Hospital"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {hospitalesList.map((h) => (
+                                        <SelectItem key={h.hospital_id} value={h.hospital_id.toString()}>
+                                            {h.hospital_nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="version">Versión</Label>
@@ -291,54 +312,24 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                             />
                         </div>
                         <div className="grid gap-2 col-span-1">
-                            <Label>Áreas Médicas</Label>
-                            <div className="space-y-2">
-                                <div className="max-h-40 overflow-y-auto space-y-1">
-                                    {areasMedicas.length > 0 ? (
-                                        <>
-                                            {formData.area_medica_ids.map((id, idx) => (
-                                                <div key={idx} className="flex gap-2 items-center">
-                                                <Select
-                                                    value={id}
-                                                    onValueChange={(value: string) => {
-                                                        const updated = [...formData.area_medica_ids];
-                                                        updated[idx] = value;
-                                                        handleInputChange("area_medica_ids", updated);
-                                                    }}
-                                                    disabled={loadingData}
-                                                >
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Área Médica"} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {areasMedicas.map((area) => (
-                                                            <SelectItem key={area.area_medica_id} value={area.area_medica_id.toString()}>
-                                                                {area.area_medica_nombre}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                {formData.area_medica_ids.length > 1 && (
-                                                    <button type="button" className="text-xs text-red-500 hover:underline whitespace-nowrap" onClick={() => {
-                                                        const updated = formData.area_medica_ids.filter((_, i) => i !== idx);
-                                                        handleInputChange("area_medica_ids", updated);
-                                                    }}>Quitar</button>
-                                                )}
-                                            </div>
-                                        ))}
-                                        </>
-                                    ) : (
-                                        <div className="text-sm text-muted-foreground">Cargando áreas médicas...</div>
-                                    )}
-                                </div>
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1 text-xs text-primary hover:underline"
-                                    onClick={() => handleInputChange("area_medica_ids", [...formData.area_medica_ids, ""]) }
-                                >
-                                    <Plus className="w-4 h-4" /> Agregar otra área médica
-                                </button>
-                            </div>
+                            <Label htmlFor="area_medica_id">Área Médica</Label>
+                            <Select
+                                key={`area_medica_${formData.area_medica_id}_${areasMedicas.length}`}
+                                value={formData.area_medica_id}
+                                onValueChange={(value) => handleInputChange("area_medica_id", value)}
+                                disabled={loadingData}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Área Médica"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {areasMedicas.map((area) => (
+                                        <SelectItem key={area.area_medica_id} value={area.area_medica_id.toString()}>
+                                            {area.area_medica_nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="grid gap-2 col-span-1">
                             <Label htmlFor="equipo">Equipo</Label>

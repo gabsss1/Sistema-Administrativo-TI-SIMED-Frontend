@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Layers } from "lucide-react"
+import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Layers, Database, Hospital } from "lucide-react"
 import { 
     type RegistroBaseTIDto, 
     type AreaMedica,
@@ -72,6 +72,7 @@ export function RegistroBaseTITable() {
     // Estados para paginación
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(5) // 5 registros por página
+    const [selectedHospital, setSelectedHospital] = useState<string>("")
 
     // Debouncing para la búsqueda
     useEffect(() => {
@@ -95,6 +96,24 @@ export function RegistroBaseTITable() {
             return registro.hospital.hospital_nombre
         }
         return registro.name_cliente || ''
+    }
+
+    // Helper para obtener un identificador del hospital (si existe) en forma de string
+    const getHospitalId = (registro: any) => {
+        if (Array.isArray(registro.hospitales) && registro.hospitales.length > 0) {
+            const id = registro.hospitales[0].hospital_id ?? registro.hospitales[0].id ?? registro.hospitales[0].hospital_codigo ?? registro.hospitales[0].codigo
+            return id !== undefined ? String(id) : getHospitalName(registro)
+        }
+        if (registro.hospitales && typeof registro.hospitales === 'object') {
+            const id = registro.hospitales.hospital_id ?? registro.hospitales.id ?? registro.hospitales.hospital_codigo ?? registro.hospitales.codigo
+            return id !== undefined ? String(id) : getHospitalName(registro)
+        }
+        if (registro.hospital && typeof registro.hospital === 'object') {
+            const id = registro.hospital.hospital_id ?? registro.hospital.id ?? registro.hospital.hospital_codigo ?? registro.hospital.codigo
+            return id !== undefined ? String(id) : getHospitalName(registro)
+        }
+        if ((registro as any).hospital_id) return String((registro as any).hospital_id)
+        return getHospitalName(registro)
     }
 
     useEffect(() => {
@@ -244,6 +263,22 @@ export function RegistroBaseTITable() {
         return () => { mounted = false }
     }, [selectedLisId])
 
+    // Opciones de hospitales extraídas de los registros (únicas)
+    const hospitalOptions = useMemo(() => {
+        const map = new Map<string, string>()
+        registros.forEach(r => {
+            const id = getHospitalId(r) || ''
+            const name = getHospitalName(r) || id || ''
+            if (id && !map.has(id)) map.set(id, name)
+        })
+        return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+    }, [registros])
+
+    // Resetear paginación al cambiar filtro de hospital
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [selectedHospital])
+
     // Compute filtered registro ids that have the selected module
     const applyModuleFilter = async () => {
         if (!selectedModuleIds || selectedModuleIds.length === 0) {
@@ -284,6 +319,8 @@ export function RegistroBaseTITable() {
 
     const clearModuleFilter = () => {
         setSelectedLisId(undefined)
+        // Clear hospital selection as well (show placeholder)
+        setSelectedHospital("")
         setSelectedModuleIds([])
         setFilteredByModuleSet(null)
         setRegistrosWithModulos(null)
@@ -324,10 +361,22 @@ export function RegistroBaseTITable() {
         // When module filter is active and we fetched registrosWithModulos, use that list as the base
         const base = (registrosWithModulos && selectedModuleIds.length > 0) ? registrosWithModulos : registros
 
+        // Start from base set (either all registros or registrosWithModulos if module filter applied)
+        let working = base
+
+        // Apply hospital filter if selected and not the 'ALL' token
+        if (selectedHospital && selectedHospital !== "" && selectedHospital !== 'ALL') {
+            working = working.filter(r => {
+                const hid = getHospitalId(r) || getHospitalName(r)
+                const name = getHospitalName(r)
+                return hid === selectedHospital || name === selectedHospital
+            })
+        }
+
         if (!searchTerm.trim()) {
             // if module set filter exists, narrow down base by it
-            if (filteredByModuleSet) return base.filter(r => filteredByModuleSet.has((r as any).registro_base_id))
-            return base
+            if (filteredByModuleSet) return working.filter(r => filteredByModuleSet.has((r as any).registro_base_id))
+            return working
         }
         
         const searchLower = searchTerm.toLowerCase()
@@ -368,7 +417,7 @@ export function RegistroBaseTITable() {
         }
 
         return results
-    }, [registros, searchTerm, filteredByModuleSet])
+    }, [registros, searchTerm, filteredByModuleSet, registrosWithModulos, selectedModuleIds, selectedHospital])
 
     // Calcular paginación (optimizado con useMemo)
     const paginationData = useMemo(() => {
@@ -407,9 +456,8 @@ export function RegistroBaseTITable() {
                     </div>
 
                     <div className="w-full sm:w-auto flex items-center gap-2">
-                            <Button onClick={handleCreate} className="w-full sm:w-auto px-4 py-2">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Nuevo Registro
+                            <Button onClick={handleCreate} variant="ghost" size="icon" aria-label="Nuevo registro">
+                                <Plus className="h-4 w-4" />
                             </Button>
                             <div className="flex items-center gap-2">
                                 <div className="w-44">
@@ -417,14 +465,40 @@ export function RegistroBaseTITable() {
                                         <SelectTrigger className="w-full"><SelectValue placeholder="Filtrar LIS"/></SelectTrigger>
                                         <SelectContent>
                                             {lisOptions.map(l => (
-                                                <SelectItem key={l.lis_id} value={String(l.lis_id)}>{l.lis_nombre}</SelectItem>
+                                                <SelectItem key={l.lis_id} value={String(l.lis_id)}>
+                                                    <div className="flex items-center">
+                                                        <Database className="h-4 w-4 mr-2 text-muted-foreground" />
+                                                        <span className="truncate">{l.lis_nombre}</span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="w-56">
+                                    <Select value={selectedHospital} onValueChange={(v) => setSelectedHospital(v)}>
+                                        <SelectTrigger className="w-full"><SelectValue placeholder="Filtrar Hospital"/></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ALL">Todos</SelectItem>
+                                            {hospitalOptions.map(h => (
+                                                <SelectItem key={h.id} value={h.id}>
+                                                    <div className="flex items-center">
+                                                        <Hospital className="h-4 w-4 mr-2 text-muted-foreground" />
+                                                        <span className="truncate">{h.name}</span>
+                                                    </div>
+                                                </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="relative">
-                                    <Button size="sm" variant="outline" onClick={() => setModulesDropdownOpen(v => !v)}>
-                                        Seleccionar Módulos ({selectedModuleIds.length})
+                                    <Button size="sm" variant="ghost" onClick={() => setModulesDropdownOpen(v => !v)} className="p-2">
+                                        <div className="relative">
+                                            <Layers className="h-5 w-5 text-muted-foreground" />
+                                            {selectedModuleIds.length > 0 && (
+                                                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white bg-red-600 rounded-full">{selectedModuleIds.length}</span>
+                                            )}
+                                        </div>
                                     </Button>
                                     {modulesDropdownOpen && (
                                         <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow p-2 z-50">
@@ -620,17 +694,28 @@ export function RegistroBaseTITable() {
                                         Anterior
                                     </Button>
                                     <div className="flex items-center space-x-1 overflow-x-auto">
-                                        {Array.from({ length: paginationData.totalPages }, (_, i) => i + 1).map((page) => (
-                                            <Button
-                                                key={page}
-                                                variant={currentPage === page ? "default" : "outline"}
-                                                size="sm"
-                                                onClick={() => setCurrentPage(page)}
-                                                className="min-w-8"
-                                            >
-                                                {page}
-                                            </Button>
-                                        ))}
+                                        {/* Show page numbers in windows of 3: [1,2,3], [4,5,6], ... */}
+                                        {(() => {
+                                            const total = paginationData.totalPages
+                                            const windowSize = 3
+                                            // compute current window index (0-based)
+                                            const windowIndex = Math.floor((currentPage - 1) / windowSize)
+                                            const start = windowIndex * windowSize + 1
+                                            const end = Math.min(total, start + windowSize - 1)
+                                            const pages = [] as number[]
+                                            for (let p = start; p <= end; p++) pages.push(p)
+                                            return pages.map((page) => (
+                                                <Button
+                                                    key={page}
+                                                    variant={currentPage === page ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className="min-w-8"
+                                                >
+                                                    {page}
+                                                </Button>
+                                            ))
+                                        })()}
                                     </div>
                                     <Button
                                         variant="outline"

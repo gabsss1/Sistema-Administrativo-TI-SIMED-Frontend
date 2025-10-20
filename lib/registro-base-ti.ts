@@ -161,6 +161,26 @@ export interface LisPorRegion {
   total: number;
 }
 
+// Nuevo tipo para la respuesta solicitada: LIS por Hospitales
+export interface LisPorHospitalItem {
+  hospital: string;
+  total: number;
+  lis: {
+    nombre: string;
+    cantidad: number;
+  }[];
+}
+
+export async function getLisPorHospitales() {
+  const response = await basicAuthenticatedFetch('/registro-base-ti/dashboard/hospitales-por-lis')
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    console.error('Error fetching LIS por hospitales', response.status, response.statusText, text)
+    throw new Error(`Error fetching LIS por hospitales: ${response.status} ${response.statusText} - ${text}`)
+  }
+  return response.json() as Promise<LisPorHospitalItem[]>
+}
+
 export async function getRegistroBaseTI() {
   const response = await basicAuthenticatedFetch("/registro-base-ti");
   if (!response.ok) {

@@ -13,30 +13,29 @@ import {
   type LisPorRegion
 } from "@/lib/registro-base-ti"
 import PieChart from "@/components/pie-chart"
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+// Accordion removed: replaced by hospitals dashboard component
 import { DashboardGuardiasStats } from "@/components/dashboard-guardias-stats"
+import DashboardLisHospitales from '@/components/dashboard-lis-hospitales'
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [lisCount, setLisCount] = useState<number>(0)
   const [lisMasUsados, setLisMasUsados] = useState<LisMasUsado[]>([])
-  const [lisPorRegiones, setLisPorRegiones] = useState<LisPorRegion[]>([])
+  
   const [loading, setLoading] = useState(true)
 
   const loadDashboardData = useCallback(async () => {
     try {
       // Cargar todas las estadísticas en paralelo
-      const [dashboardStats, lisData, lisMasUsadosData, lisPorRegionesData] = await Promise.all([
+      const [dashboardStats, lisData, lisMasUsadosData] = await Promise.all([
         getDashboardStats(),
         getLis(),
-        getLisMasUsados(),
-        getLisPorRegiones()
+        getLisMasUsados()
       ])
 
       setStats(dashboardStats)
       setLisCount(lisData.length || 0)
       setLisMasUsados(lisMasUsadosData)
-      setLisPorRegiones(lisPorRegionesData)
     } catch (error) {
       console.error("Error loading dashboard data:", error)
     } finally {
@@ -154,44 +153,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>LIS por Regiones</CardTitle>
-            <CardDescription>Distribución de sistemas por provincias</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible>
-              {lisPorRegiones.map((region, index) => (
-                <AccordionItem key={index} value={`region-${index}`}>
-                  <AccordionTrigger>
-                    <div className="w-full flex items-center justify-between px-1 py-2">
-                      <span className="text-base font-medium text-foreground">{region.region}</span>
-                      <span className="text-base font-semibold text-muted-foreground">{region.total}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <ul className="mt-1 space-y-1 px-2">
-                      {region.lis.map((lis, lisIndex) => {
-                        return (
-                          <li key={lisIndex} className="flex items-center justify-between">
-                            <span className="flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-black" />
-                              <span className="text-sm text-foreground">{lis.nombre}</span>
-                            </span>
-                            <span className="text-sm text-muted-foreground">{lis.cantidad}</span>
-                          </li>
-                        );
-                      })}
-                      {region.lis.length === 0 && (
-                        <li className="text-sm text-muted-foreground py-2">No hay LIS en esta región</li>
-                      )}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
+        <DashboardLisHospitales />
       </div>
 
       {/* Estadísticas de Guardias */}

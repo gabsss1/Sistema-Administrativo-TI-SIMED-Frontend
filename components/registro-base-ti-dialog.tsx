@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Swal from 'sweetalert2'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -79,6 +79,12 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     const [responsables, setResponsables] = useState<Responsable[]>([])
     
     const [formData, setFormData] = useState(initialFormData)
+    // (Removed in-dropdown search inputs: selects will show full option lists)
+
+    const statusOptions = [
+        { id: 'active', nombre: 'Activo' },
+        { id: 'inactive', nombre: 'Cerrado' }
+    ]
 
     // Cargar datos de las entidades relacionadas
     useEffect(() => {
@@ -510,8 +516,9 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                                     <SelectValue placeholder="Seleccionar estado" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="active">Activo</SelectItem>
-                                    <SelectItem value="inactive">Cerrado</SelectItem>
+                                    {statusOptions.map(s => (
+                                        <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>

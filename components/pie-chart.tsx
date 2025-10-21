@@ -11,6 +11,8 @@ type Slice = {
 type Props = {
   data: Slice[]
   size?: number
+  onSliceClick?: (slice: Slice) => void
+  onCenterClick?: () => void
 }
 
 function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: number) {
@@ -37,7 +39,7 @@ function describeArc(cx: number, cy: number, r: number, startAngle: number, endA
   return d
 }
 
-export function PieChart({ data, size = 200 }: Props) {
+export function PieChart({ data, size = 200, onSliceClick, onCenterClick }: Props) {
   const [hovered, setHovered] = useState<number | null>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string } | null>(null)
 
@@ -112,13 +114,24 @@ export function PieChart({ data, size = 200 }: Props) {
                   setHovered(null)
                   setTooltip(null)
                 }}
+                onClick={() => {
+                  if (typeof onSliceClick === 'function') onSliceClick(s)
+                }}
                 filter={isHovered ? "url(#shadow)" : undefined}
               />
             </g>
           )
         })}
-        <circle cx={cx} cy={cy} r={r * 0.45} fill="#fff" />
-        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" className="text-sm" style={{ fontSize: 12, fill: '#111' }}>
+        <circle cx={cx} cy={cy} r={r * 0.45} fill="#fff" onClick={() => { if (typeof onCenterClick === 'function') onCenterClick() }} style={{ cursor: onCenterClick ? 'pointer' : 'default' }} />
+        <text
+          x={cx}
+          y={cy}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          className="text-sm"
+          style={{ fontSize: 12, fill: '#111', pointerEvents: onCenterClick ? 'auto' : 'none', cursor: onCenterClick ? 'pointer' : 'default' }}
+          onClick={() => { if (typeof onCenterClick === 'function') onCenterClick() }}
+        >
           {total}
         </text>
       </svg>

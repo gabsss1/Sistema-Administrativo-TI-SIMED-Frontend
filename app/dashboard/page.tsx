@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [lisCount, setLisCount] = useState<number>(0)
   const [lisMasUsados, setLisMasUsados] = useState<LisMasUsado[]>([])
+  const [selectedLisFilter, setSelectedLisFilter] = useState<{ nombre: string; cantidad: number } | null>(null)
   
   const [loading, setLoading] = useState(true)
 
@@ -130,6 +131,11 @@ export default function DashboardPage() {
                       porcentaje: lis.porcentaje,
                     }))}
                     size={200}
+                    onSliceClick={(slice) => {
+                      // when user clicks a pie slice, set selected LIS filter for the hospitals card
+                      setSelectedLisFilter({ nombre: slice.nombre, cantidad: slice.cantidad })
+                    }}
+                    onCenterClick={() => setSelectedLisFilter(null)}
                   />
                 </div>
 
@@ -153,7 +159,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <DashboardLisHospitales />
+        <DashboardLisHospitales selectedLisFilter={selectedLisFilter} onClearFilter={() => setSelectedLisFilter(null)} />
       </div>
 
       {/* Estadísticas de Guardias */}

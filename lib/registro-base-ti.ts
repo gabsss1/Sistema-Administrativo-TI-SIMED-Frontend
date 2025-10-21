@@ -290,12 +290,16 @@ export interface Modulo {
 }
 
 export async function getModulos(lis_id?: number) {
-  const params = new URLSearchParams()
-  if (lis_id) params.append('lis_id', String(lis_id))
-
-  const url = params.toString() ? `/modulos?${params.toString()}` : `/modulos`
+  // If a lis_id is provided the backend exposes a dedicated endpoint
+  // that returns modules for that LIS (and an empty array when none).
+  // Use /lis/{id}/modulos when lis_id is given; otherwise fall back to /modulos
+  const url = lis_id ? `/lis/${lis_id}/modulos` : `/modulos`
   const response = await basicAuthenticatedFetch(url)
-  if (!response.ok) throw new Error('Error al obtener módulos')
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    console.error('Error al obtener módulos', response.status, response.statusText, text)
+    throw new Error('Error al obtener módulos')
+  }
   return response.json()
 }
 

@@ -84,6 +84,11 @@ export function RegistroBaseTITable() {
         return () => clearTimeout(timer)
     }, [searchInput])
 
+    // Reset pagination when LIS selection changes
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [selectedLisId])
+
     // Helper para normalizar y obtener el nombre del hospital desde distintas formas que pueda devolver el backend
     const getHospitalName = (registro: any) => {
         if (Array.isArray(registro.hospitales) && registro.hospitales.length > 0) {
@@ -373,6 +378,14 @@ export function RegistroBaseTITable() {
             })
         }
 
+        // Apply LIS filter if selected
+        if (selectedLisId) {
+            working = working.filter(r => {
+                const lisVal = typeof r.lis === 'object' && r.lis ? (r.lis as Lis).lis_id || (r.lis as any).id : r.lis
+                return Number(lisVal) === Number(selectedLisId)
+            })
+        }
+
         if (!searchTerm.trim()) {
             // if module set filter exists, narrow down base by it
             if (filteredByModuleSet) return working.filter(r => filteredByModuleSet.has((r as any).registro_base_id))
@@ -417,7 +430,7 @@ export function RegistroBaseTITable() {
         }
 
         return results
-    }, [registros, searchTerm, filteredByModuleSet, registrosWithModulos, selectedModuleIds, selectedHospital])
+    }, [registros, searchTerm, filteredByModuleSet, registrosWithModulos, selectedModuleIds, selectedHospital, selectedLisId])
 
     // Calcular paginación (optimizado con useMemo)
     const paginationData = useMemo(() => {
@@ -442,7 +455,7 @@ export function RegistroBaseTITable() {
             <CardHeader>
                 <CardTitle>Registros Base TI</CardTitle>
                 <CardDescription>Gestión de registros base de tecnología de la información.</CardDescription>
-                <div className="flex flex-col gap-3 mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="flex flex-col gap-3 mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                     <div className="w-full sm:w-auto">
                         <div className="relative w-full">
                             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -455,12 +468,12 @@ export function RegistroBaseTITable() {
                         </div>
                     </div>
 
-                    <div className="w-full sm:w-auto flex items-center gap-2">
+                    <div className="w-full sm:w-auto flex items-center gap-2 flex-wrap">
                             <Button onClick={handleCreate} variant="ghost" size="icon" aria-label="Nuevo registro">
                                 <Plus className="h-4 w-4" />
                             </Button>
                             <div className="flex items-center gap-2">
-                                <div className="w-44">
+                                    <div className="w-full sm:w-44">
                                     <Select value={selectedLisId ? String(selectedLisId) : ""} onValueChange={(v) => setSelectedLisId(Number(v) || undefined)}>
                                         <SelectTrigger className="w-full"><SelectValue placeholder="Filtrar LIS"/></SelectTrigger>
                                         <SelectContent>
@@ -475,7 +488,7 @@ export function RegistroBaseTITable() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="w-56">
+                                <div className="w-full sm:w-56">
                                     <Select value={selectedHospital} onValueChange={(v) => setSelectedHospital(v)}>
                                         <SelectTrigger className="w-full"><SelectValue placeholder="Filtrar Hospital"/></SelectTrigger>
                                         <SelectContent>
@@ -541,21 +554,21 @@ export function RegistroBaseTITable() {
                         </div>
                     </div>
                 ) : (
-                    <div>
+                    <div className="overflow-x-auto">
                         <Table>
                         <TableHeader>
                 <TableRow>
                     <TableHead>Hospital</TableHead>
-                                <TableHead>Versión</TableHead>
-                                <TableHead>Área Médica</TableHead>
+                                <TableHead className="hidden sm:table-cell">Versión</TableHead>
+                                <TableHead className="hidden md:table-cell">Área Médica</TableHead>
                                 <TableHead>Equipo</TableHead>
-                                <TableHead>LIS</TableHead>
-                                <TableHead>Modalidad</TableHead>
-                                <TableHead>Provincia</TableHead>
-                                <TableHead>Código Centro</TableHead>
-                                <TableHead>Fecha Implementación</TableHead>
-                                <TableHead>Implementación</TableHead>
-                                <TableHead>Estado</TableHead>
+                                <TableHead className="hidden sm:table-cell">LIS</TableHead>
+                                <TableHead className="hidden md:table-cell">Modalidad</TableHead>
+                                <TableHead className="hidden lg:table-cell">Provincia</TableHead>
+                                <TableHead className="hidden lg:table-cell">Código Centro</TableHead>
+                                <TableHead className="hidden lg:table-cell">Fecha Implementación</TableHead>
+                                <TableHead className="hidden sm:table-cell">Implementación</TableHead>
+                                <TableHead className="hidden md:table-cell">Estado</TableHead>
                                 <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -565,8 +578,8 @@ export function RegistroBaseTITable() {
                                     <TableCell>
                                         {getHospitalName(registro)}
                                     </TableCell>
-                                    <TableCell>{registro.version}</TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden sm:table-cell">{registro.version}</TableCell>
+                                    <TableCell className="hidden md:table-cell">
                                         {Array.isArray(registro.area_medicas) && registro.area_medicas.length > 0
                                             ? registro.area_medicas[0].area_medica_nombre
                                             : (registro.area_medica && typeof registro.area_medica === 'object')
@@ -574,29 +587,29 @@ export function RegistroBaseTITable() {
                                                 : ''}
                                     </TableCell>
                                     <TableCell>{registro.equipo}</TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden sm:table-cell">
                                         {typeof registro.lis === 'object' && registro.lis 
                                             ? registro.lis.lis_nombre 
                                             : registro.lis}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden md:table-cell">
                                         {typeof registro.modalidad === 'object' && registro.modalidad 
                                             ? registro.modalidad.modalidad_nombre 
                                             : registro.modalidad}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden lg:table-cell">
                                         {typeof registro.provincia === 'object' && registro.provincia 
                                             ? registro.provincia.provincia_nombre 
                                             : registro.provincia}
                                     </TableCell>
-                                    <TableCell>{registro.codigo_centro || '-'}</TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden lg:table-cell">{registro.codigo_centro || '-'}</TableCell>
+                                    <TableCell className="hidden lg:table-cell">
                                         {(registro as any).fecha_display || 
                                          (registro.fecha_implentacion 
                                             ? registro.fecha_implentacion.split('-').reverse().join('/')
                                             : '-')}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden sm:table-cell">
                                         <Badge 
                                             variant={registro.implementado ? "default" : "secondary"}
                                             className={registro.implementado 
@@ -607,12 +620,12 @@ export function RegistroBaseTITable() {
                                             {registro.implementado ? "Implementado" : "Pendiente"}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden md:table-cell">
                                         <Badge variant={registro.status ? "default" : "secondary"}>
                                             {registro.status ? "Activo" : "Cerrado"}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="text-right sm:text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="icon">

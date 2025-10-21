@@ -75,13 +75,13 @@ const SelectContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(({ className, children, position = "popper", ...props }, ref) => (
   <SelectPrimitive.Portal>
-    <SelectPrimitive.Content
+      <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-select-content-transform-origin]",
+        "relative z-50 max-h-[--radix-select-content-available-height] min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1 origin-[--radix-select-content-transform-origin]",
         "max-h-40 overflow-y-auto",
         position === "popper" &&
-          "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+          "data-[side=bottom]:translate-y-1",
         className
       )}
       position={position}
@@ -91,9 +91,30 @@ const SelectContent = React.forwardRef<
       <SelectPrimitive.Viewport
         className={cn(
           "p-1",
+          // On small screens make dropdown expand to near-full width to avoid clipping
+          "w-[min(95vw,var(--radix-select-trigger-width))] sm:w-full",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+            "h-[var(--radix-select-trigger-height)] min-w-[var(--radix-select-trigger-width)]"
         )}
+        // Intercept single-character keys so the built-in "type-to-select" behavior
+        // doesn't activate. We still allow navigation keys (ArrowUp/ArrowDown), Enter, Esc, etc.
+        onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+          try {
+            // Allow typing when an input/textarea/contentEditable is focused (the in-dropdown search)
+            const active = typeof document !== 'undefined' ? document.activeElement as HTMLElement | null : null
+            const isTypingIntoInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+            if (isTypingIntoInput) return
+
+            const k = e.key
+            if (k && k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+              // prevent the built-in "type-to-select" behavior so we rely on the explicit search box
+              e.stopPropagation()
+              e.preventDefault()
+            }
+          } catch (err) {
+            // ignore
+          }
+        }}
       >
         {children}
       </SelectPrimitive.Viewport>

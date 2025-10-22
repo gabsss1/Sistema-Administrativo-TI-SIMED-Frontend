@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback, Suspense, lazy } from "react"
+import { useSearchParams } from 'next/navigation'
 import Swal from 'sweetalert2'
 import { Button } from "@/components/ui/button"
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
@@ -73,6 +74,36 @@ export function RegistroBaseTITable() {
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(5) // 5 registros por página
     const [selectedHospital, setSelectedHospital] = useState<string>("")
+    const searchParams = useSearchParams()
+    const [initialFilterImplementado, setInitialFilterImplementado] = useState<boolean | undefined>(undefined)
+
+    // Apply initial filters from query params (if any)
+    useEffect(() => {
+        try {
+            if (!searchParams) return
+            const impl = searchParams.get('implementado')
+            if (impl === 'true') setInitialFilterImplementado(true)
+            else if (impl === 'false') setInitialFilterImplementado(false)
+
+            // backwards compatible 'pendientes' param -> implementado=false
+            const pendientes = searchParams.get('pendientes')
+            if (pendientes === 'true') setInitialFilterImplementado(false)
+
+            const lis_q = searchParams.get('lis_id')
+            if (lis_q) {
+                const n = Number(lis_q)
+                if (!Number.isNaN(n)) setSelectedLisId(n)
+            }
+
+            const mods = searchParams.get('modulos')
+            if (mods) {
+                const arr = mods.split(',').map(s => Number(s)).filter(n => !Number.isNaN(n))
+                setSelectedModuleIds(arr)
+            }
+        } catch (err) {
+            // ignore
+        }
+    }, [searchParams])
 
     // Debouncing para la búsqueda
     useEffect(() => {
@@ -369,6 +400,11 @@ export function RegistroBaseTITable() {
         // Start from base set (either all registros or registrosWithModulos if module filter applied)
         let working = base
 
+        // Apply initial implementado filter from query param if provided
+        if (initialFilterImplementado !== undefined) {
+            working = working.filter(r => Boolean((r as any).implementado) === Boolean(initialFilterImplementado))
+        }
+
         // Apply hospital filter if selected and not the 'ALL' token
         if (selectedHospital && selectedHospital !== "" && selectedHospital !== 'ALL') {
             working = working.filter(r => {
@@ -468,11 +504,14 @@ export function RegistroBaseTITable() {
                         </div>
                     </div>
 
-                    <div className="w-full sm:w-auto flex items-center gap-2 flex-wrap">
-                            <Button onClick={handleCreate} variant="ghost" size="icon" aria-label="Nuevo registro">
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                            <div className="flex items-center gap-2">
+                    <div className="w-full sm:w-auto">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+                            <div className="flex items-center">
+                                <Button onClick={handleCreate} variant="ghost" size="icon" aria-label="Nuevo registro">
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
                                     <div className="w-full sm:w-44">
                                     <Select value={selectedLisId ? String(selectedLisId) : ""} onValueChange={(v) => setSelectedLisId(Number(v) || undefined)}>
                                         <SelectTrigger className="w-full"><SelectValue placeholder="Filtrar LIS"/></SelectTrigger>
@@ -504,17 +543,18 @@ export function RegistroBaseTITable() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="relative">
-                                    <Button size="sm" variant="ghost" onClick={() => setModulesDropdownOpen(v => !v)} className="p-2">
-                                        <div className="relative">
-                                            <Layers className="h-5 w-5 text-muted-foreground" />
+                                <div className="relative w-full sm:w-auto">
+                                    <Button size="sm" variant="ghost" onClick={() => setModulesDropdownOpen(v => !v)} className="p-2 w-full sm:w-auto text-left">
+                                        <div className="relative flex items-center">
+                                            <Layers className="h-5 w-5 text-muted-foreground mr-2" />
+                                            <span className="hidden sm:inline">Módulos</span>
                                             {selectedModuleIds.length > 0 && (
                                                 <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white bg-red-600 rounded-full">{selectedModuleIds.length}</span>
                                             )}
                                         </div>
                                     </Button>
                                     {modulesDropdownOpen && (
-                                        <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow p-2 z-50">
+                                        <div className="sm:absolute relative sm:right-0 mt-2 w-full sm:w-64 bg-white border rounded shadow p-2 z-50">
                                             <div className="max-h-48 overflow-auto">
                                                 {moduleOptions.map(m => (
                                                     <label key={m.modulo_id} className="flex items-center gap-2 py-1">
@@ -525,19 +565,20 @@ export function RegistroBaseTITable() {
                                                     </label>
                                                 ))}
                                             </div>
-                                            <div className="flex justify-end gap-2 mt-2">
-                                                <Button size="sm" variant="ghost" onClick={() => { setSelectedModuleIds([]); setModulesDropdownOpen(false) }}>Limpiar</Button>
-                                                <Button size="sm" onClick={() => setModulesDropdownOpen(false)}>Cerrar</Button>
+                                            <div className="flex flex-col sm:flex-row justify-end gap-2 mt-2">
+                                                <Button size="sm" variant="ghost" onClick={() => { setSelectedModuleIds([]); setModulesDropdownOpen(false) }} className="w-full sm:w-auto">Limpiar</Button>
+                                                <Button size="sm" onClick={() => setModulesDropdownOpen(false)} className="w-full sm:w-auto">Cerrar</Button>
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Button size="sm" variant="outline" onClick={applyModuleFilter} disabled={selectedModuleIds.length === 0 || filtering}>{filtering ? 'Aplicando...' : 'Aplicar'}</Button>
-                                    <Button size="sm" variant="ghost" onClick={clearModuleFilter}>Limpiar</Button>
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                                    <Button size="sm" variant="outline" onClick={applyModuleFilter} disabled={selectedModuleIds.length === 0 || filtering} className="w-full sm:w-auto">{filtering ? 'Aplicando...' : 'Aplicar'}</Button>
+                                    <Button size="sm" variant="ghost" onClick={clearModuleFilter} className="w-full sm:w-auto">Limpiar</Button>
                                 </div>
                             </div>
                         </div>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>

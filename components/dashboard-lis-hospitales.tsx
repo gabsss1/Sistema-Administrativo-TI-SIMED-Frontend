@@ -14,6 +14,12 @@ export default function DashboardLisHospitales({
   selectedLisFilter?: { nombre: string; cantidad: number } | null
   onClearFilter?: () => void
 }) {
+  // Helper to truncate long names and append ellipsis. Keep full name in title for hover.
+  const truncateText = (text: string | null | undefined, max = 30) => {
+    if (!text) return ''
+    const s = String(text)
+    return s.length > max ? s.slice(0, max) + '...' : s
+  }
   const [data, setData] = useState<LisPorHospitalItem[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,20 +97,20 @@ export default function DashboardLisHospitales({
                   <AccordionItem key={idx} value={`h-${idx}`}>
                     <AccordionTrigger>
                       <div className="w-full flex items-center justify-between px-1 py-2">
-                        <span className="text-base font-medium text-foreground flex items-center gap-2 min-w-0">
+                        <span className="text-base font-medium text-foreground flex items-center gap-2 min-w-0 flex-1 mr-2">
                           <Hospital className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate">{hosp.hospital}</span>
+                          <span className="truncate" title={hosp.hospital}>{truncateText(hosp.hospital, 30)}</span>
                         </span>
-                        <span className="text-base font-semibold text-muted-foreground">{hospitalTotal}</span>
+                        <span className="text-base font-semibold text-muted-foreground flex-shrink-0">{hospitalTotal}</span>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
                       <ul className="mt-1 space-y-1 px-2">
                         {lisToShow.map((l, li) => (
                           <li key={li} className="flex items-center justify-between">
-                            <span className="flex items-center gap-2 min-w-0">
+                            <span className="flex items-center gap-2 min-w-0 flex-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-black flex-shrink-0" />
-                              <span className="text-sm text-foreground truncate">{l.nombre}</span>
+                              <span className="text-sm text-foreground truncate" title={l.nombre}>{truncateText(l.nombre, 30)}</span>
                             </span>
                             <span className="text-sm text-muted-foreground">{l.cantidad}</span>
                           </li>

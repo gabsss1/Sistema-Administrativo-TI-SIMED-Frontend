@@ -16,6 +16,7 @@ import PieChart from "@/components/pie-chart"
 // Accordion removed: replaced by hospitals dashboard component
 import { DashboardGuardiasStats } from "@/components/dashboard-guardias-stats"
 import DashboardLisHospitales from '@/components/dashboard-lis-hospitales'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -48,6 +49,18 @@ export default function DashboardPage() {
     loadDashboardData()
   }, [loadDashboardData])
 
+  const router = useRouter()
+
+  const goToRegistroBase = (params?: Record<string, string>) => {
+    const base = '/registro-base-ti'
+    if (!params || Object.keys(params).length === 0) {
+      router.push(base)
+      return
+    }
+    const qs = new URLSearchParams(params).toString()
+    router.push(`${base}?${qs}`)
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -57,57 +70,65 @@ export default function DashboardPage() {
 
       {/* Estadísticas principales */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Registros</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {loading ? "..." : stats?.total_registros || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Registros en el sistema</p>
-          </CardContent>
-        </Card>
+        <div role="button" tabIndex={0} onClick={() => goToRegistroBase()} onKeyDown={(e) => e.key === 'Enter' && goToRegistroBase()}>
+          <Card className="cursor-pointer hover:shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Registros</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {loading ? "..." : stats?.total_registros || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Registros en el sistema</p>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Implementados</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {loading ? "..." : stats?.implementados || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Sistemas implementados</p>
-          </CardContent>
-        </Card>
+        <div role="button" tabIndex={0} onClick={() => goToRegistroBase({ implementado: 'true' })} onKeyDown={(e) => e.key === 'Enter' && goToRegistroBase({ implementado: 'true' })}>
+          <Card className="cursor-pointer hover:shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Implementados</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {loading ? "..." : stats?.implementados || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Sistemas implementados</p>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sistemas LIS</CardTitle>
-            <Database className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {loading ? "..." : lisCount}
-            </div>
-            <p className="text-xs text-muted-foreground">LIS registrados</p>
-          </CardContent>
-        </Card>
+        <div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Sistemas LIS</CardTitle>
+              <Database className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {loading ? "..." : lisCount}
+              </div>
+              <p className="text-xs text-muted-foreground">LIS registrados</p>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {loading ? "..." : stats?.pendientes || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Por implementar</p>
-          </CardContent>
-        </Card>
+        <div role="button" tabIndex={0} onClick={() => goToRegistroBase({ pendientes: 'true' })} onKeyDown={(e) => e.key === 'Enter' && goToRegistroBase({ pendientes: 'true' })}>
+          <Card className="cursor-pointer hover:shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {loading ? "..." : stats?.pendientes || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Por implementar</p>
+            </CardContent>
+          </Card>
+        </div>
 
       </div>
 

@@ -84,7 +84,7 @@ export function DashboardGuardiasStats() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
@@ -94,9 +94,9 @@ export function DashboardGuardiasStats() {
           </div>
           
           {/* Selector de mes y año */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap items-center sm:mt-0 mt-2">
             <Select value={month.toString()} onValueChange={(value) => setMonth(parseInt(value))}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-24 sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -109,7 +109,7 @@ export function DashboardGuardiasStats() {
             </Select>
             
             <Select value={year.toString()} onValueChange={(value) => setYear(parseInt(value))}>
-              <SelectTrigger className="w-20">
+              <SelectTrigger className="w-20 sm:w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

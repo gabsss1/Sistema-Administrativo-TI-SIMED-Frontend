@@ -6,11 +6,13 @@ type Slice = {
   nombre: string
   cantidad: number
   porcentaje: number // Include porcentaje in the Slice type
+  id?: number
 }
 
 type Props = {
   data: Slice[]
   size?: number
+  colors?: string[]
   onSliceClick?: (slice: Slice) => void
   onCenterClick?: () => void
 }
@@ -39,7 +41,7 @@ function describeArc(cx: number, cy: number, r: number, startAngle: number, endA
   return d
 }
 
-export function PieChart({ data, size = 200, onSliceClick, onCenterClick }: Props) {
+export function PieChart({ data, size = 200, colors: colorsProp, onSliceClick, onCenterClick }: Props) {
   const [hovered, setHovered] = useState<number | null>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string } | null>(null)
 
@@ -60,7 +62,7 @@ export function PieChart({ data, size = 200, onSliceClick, onCenterClick }: Prop
     })
   }, [data])
 
-  const colors = [
+  const defaultColors = [
     "#6366F1",
     "#EF4444",
     "#F59E0B",
@@ -68,7 +70,11 @@ export function PieChart({ data, size = 200, onSliceClick, onCenterClick }: Prop
     "#06B6D4",
     "#8B5CF6",
     "#F97316",
+    "#94A3B8",
+    "#FB7185",
+    "#60A5FA",
   ]
+  const colors = colorsProp && colorsProp.length > 0 ? colorsProp : defaultColors
 
   const cx = size / 2
   const cy = size / 2

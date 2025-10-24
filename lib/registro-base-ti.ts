@@ -63,6 +63,16 @@ export async function getLisPorRegiones() {
   return response.json()
 }
 
+export async function getModulosMasUsados() {
+  const response = await basicAuthenticatedFetch('/registro-base-ti/dashboard/modulos-mas-usados')
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    console.error('Error fetching modulos mas usados', response.status, response.statusText, text)
+    throw new Error('Error fetching módulos más usados')
+  }
+  return response.json()
+}
+
 // CRUD RegistroBaseTI
 export interface RegistroBaseTIDto {
   registro_base_id?: number;
@@ -179,6 +189,26 @@ export async function getLisPorHospitales() {
     throw new Error(`Error fetching LIS por hospitales: ${response.status} ${response.statusText} - ${text}`)
   }
   return response.json() as Promise<LisPorHospitalItem[]>
+}
+
+// Tipo para Módulos por Hospital (endpoint: /registro-base-ti/dashboard/hospitales-por-modulo)
+export interface HospitalesPorModuloItem {
+  hospital: string
+  total: number
+  modulos: {
+    nombre: string
+    cantidad: number
+  }[]
+}
+
+export async function getHospitalesPorModuloAll() {
+  const response = await basicAuthenticatedFetch('/registro-base-ti/dashboard/hospitales-por-modulo')
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    console.error('Error fetching módulos por hospital', response.status, response.statusText, text)
+    throw new Error(`Error fetching módulos por hospital: ${response.status} ${response.statusText} - ${text}`)
+  }
+  return response.json() as Promise<HospitalesPorModuloItem[]>
 }
 
 export async function getRegistroBaseTI() {

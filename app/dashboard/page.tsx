@@ -13,6 +13,8 @@ import {
   type LisPorRegion
 } from "@/lib/registro-base-ti"
 import PieChart from "@/components/pie-chart"
+import DashboardModulosStats from '@/components/dashboard-modulos-stats'
+import DashboardModulosPorHospitales from '@/components/dashboard-modulos-por-hospitales'
 // Accordion removed: replaced by hospitals dashboard component
 import { DashboardGuardiasStats } from "@/components/dashboard-guardias-stats"
 import DashboardLisHospitales from '@/components/dashboard-lis-hospitales'
@@ -23,6 +25,7 @@ export default function DashboardPage() {
   const [lisCount, setLisCount] = useState<number>(0)
   const [lisMasUsados, setLisMasUsados] = useState<LisMasUsado[]>([])
   const [selectedLisFilter, setSelectedLisFilter] = useState<{ nombre: string; cantidad: number } | null>(null)
+  const [selectedModulo, setSelectedModulo] = useState<{ id: number; nombre: string; lis_id?: number | null } | null>(null)
   
   const [loading, setLoading] = useState(true)
 
@@ -132,8 +135,12 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* Analytics */}
+      {/* Analytics: organized as two rows x two columns
+          Row 1: LIS Más Usados | LIS por Hospitales
+          Row 2: Módulos Más Usados | Módulos por Hospital
+      */}
       <div className="grid gap-4 md:grid-cols-2">
+        {/* Row 1, Col 1: LIS Más Usados */}
         <Card>
           <CardHeader>
             <CardTitle>LIS Más Usados</CardTitle>
@@ -153,7 +160,6 @@ export default function DashboardPage() {
                     }))}
                     size={200}
                     onSliceClick={(slice) => {
-                      // when user clicks a pie slice, set selected LIS filter for the hospitals card
                       setSelectedLisFilter({ nombre: slice.nombre, cantidad: slice.cantidad })
                     }}
                     onCenterClick={() => setSelectedLisFilter(null)}
@@ -170,7 +176,7 @@ export default function DashboardPage() {
                         </div>
                         <span className="text-sm font-bold">{lis.cantidad}</span>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               </div>
@@ -180,7 +186,18 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Row 1, Col 2: LIS por Hospitales */}
         <DashboardLisHospitales selectedLisFilter={selectedLisFilter} onClearFilter={() => setSelectedLisFilter(null)} />
+
+        {/* Row 2, Col 1: Módulos Más Usados */}
+        <DashboardModulosStats
+          selectedModuloId={selectedModulo?.id ?? null}
+          selectedModuloNombre={selectedModulo?.nombre ?? null}
+          onSelectModulo={(m) => setSelectedModulo(m as any)}
+        />
+
+        {/* Row 2, Col 2: Módulos por Hospital (filtrado por módulo seleccionado) */}
+  <DashboardModulosPorHospitales selectedModuloId={selectedModulo?.id ?? null} selectedModuloLisId={selectedModulo?.lis_id ?? null} />
       </div>
 
       {/* Estadísticas de Guardias */}

@@ -125,7 +125,7 @@ export function UsersTableNestJS() {
         </Alert>
       )}
 
-      <Card>
+      <Card className="no-borders">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -154,16 +154,16 @@ export function UsersTableNestJS() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="pl-10"
+                className="pl-10 clean-focus"
               />
             </div>
-            <Button variant="outline" onClick={handleSearch}>
+            <Button variant="outline" onClick={handleSearch} className="btn-clean">
               Buscar
             </Button>
           </div>
 
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md table-no-borders">
+            <Table className="table-no-borders">
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuario</TableHead>

@@ -74,6 +74,29 @@ const nextConfig = {
             chunks: 'all',
             enforce: true,
           },
+          // Separar librerías pesadas
+          sweetalert: {
+            test: /[\\/]node_modules[\\/]sweetalert2[\\/]/,
+            name: 'sweetalert2',
+            chunks: 'all',
+            priority: 10,
+          },
+          lucide: {
+            test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+            name: 'lucide-react',
+            chunks: 'all',
+            priority: 10,
+          },
+        },
+      }
+    }
+
+    // Optimizaciones para desarrollo
+    if (dev) {
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
         },
       }
     }

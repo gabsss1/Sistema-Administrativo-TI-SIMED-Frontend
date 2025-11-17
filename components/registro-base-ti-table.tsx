@@ -487,7 +487,7 @@ export function RegistroBaseTITable() {
 
 
     return (
-        <Card className="w-full">
+        <Card className="w-full no-borders">
             <CardHeader>
                 <CardTitle>Registros Base TI</CardTitle>
                 <CardDescription>Gestión de registros base de tecnología de la información.</CardDescription>
@@ -499,7 +499,7 @@ export function RegistroBaseTITable() {
                                 placeholder="Buscar..."
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
-                                className="pl-8 w-full sm:max-w-sm"
+                                className="pl-8 w-full sm:max-w-sm clean-focus"
                             />
                         </div>
                     </div>
@@ -573,7 +573,7 @@ export function RegistroBaseTITable() {
                                     )}
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-                                    <Button size="sm" variant="outline" onClick={applyModuleFilter} disabled={selectedModuleIds.length === 0 || filtering} className="w-full sm:w-auto">{filtering ? 'Aplicando...' : 'Aplicar'}</Button>
+                                    <Button size="sm" variant="outline" onClick={applyModuleFilter} disabled={selectedModuleIds.length === 0 || filtering} className="w-full sm:w-auto btn-clean">{filtering ? 'Aplicando...' : 'Aplicar'}</Button>
                                     <Button size="sm" variant="ghost" onClick={clearModuleFilter} className="w-full sm:w-auto">Limpiar</Button>
                                 </div>
                             </div>
@@ -595,8 +595,8 @@ export function RegistroBaseTITable() {
                         </div>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <Table>
+                    <div className="overflow-x-auto table-no-borders">
+                        <Table className="table-no-borders">
                         <TableHeader>
                 <TableRow>
                     <TableHead>Hospital</TableHead>
@@ -719,7 +719,7 @@ export function RegistroBaseTITable() {
                                         size="sm"
                                         onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                                         disabled={currentPage === 1}
-                                        className="flex-1 mr-2 justify-center"
+                                        className="flex-1 mr-2 justify-center btn-clean"
                                         aria-label="Página anterior"
                                     >
                                         <ChevronLeft className="h-4 w-4" />
@@ -730,7 +730,7 @@ export function RegistroBaseTITable() {
                                         size="sm"
                                         onClick={() => setCurrentPage(Math.min(paginationData.totalPages, currentPage + 1))}
                                         disabled={currentPage === paginationData.totalPages}
-                                        className="flex-1 ml-2 justify-center"
+                                        className="flex-1 ml-2 justify-center btn-clean"
                                         aria-label="Página siguiente"
                                     >
                                         <ChevronRight className="h-4 w-4" />
@@ -742,8 +742,9 @@ export function RegistroBaseTITable() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
+                                        className="btn-clean"
                                     >
                                         Anterior
                                     </Button>
@@ -764,7 +765,7 @@ export function RegistroBaseTITable() {
                                                     variant={currentPage === page ? "default" : "outline"}
                                                     size="sm"
                                                     onClick={() => setCurrentPage(page)}
-                                                    className="min-w-8"
+                                                    className="min-w-8 btn-clean"
                                                 >
                                                     {page}
                                                 </Button>
@@ -776,6 +777,7 @@ export function RegistroBaseTITable() {
                                         size="sm"
                                         onClick={() => setCurrentPage(Math.min(paginationData.totalPages, currentPage + 1))}
                                         disabled={currentPage === paginationData.totalPages}
+                                        className="btn-clean"
                                     >
                                         Siguiente
                                     </Button>

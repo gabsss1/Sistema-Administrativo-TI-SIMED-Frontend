@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-import { LayoutDashboard, Database, Calendar, Menu, X, Cast, File } from "lucide-react"
+import { LayoutDashboard, Database, Calendar, Menu, X, Cast, File, Monitor } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -19,6 +19,11 @@ const navigation = [
     name: "Registro Base TI",
     href: "/registro-base-ti",
     icon: Database,
+  },
+  {
+    name: "Anydesk",
+    href: "/anydesk",
+    icon: Monitor,
   },
   {
     name: "Gestionar Guardias",

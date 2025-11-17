@@ -163,6 +163,11 @@ export default function AnydeskTable() {
     // Función para copiar el número de AnyDesk al portapapeles
     const handleOpenAnydesk = useCallback(async (numero: string) => {
         try {
+            // Verificar si la API del portapapeles está disponible
+            if (!navigator.clipboard) {
+                throw new Error('API del portapapeles no disponible')
+            }
+            
             await navigator.clipboard.writeText(numero)
             const Swal = await loadSwal()
             Swal.fire({
@@ -175,14 +180,58 @@ export default function AnydeskTable() {
                 position: 'top-end'
             })
         } catch (error) {
-            const Swal = await loadSwal()
-            Swal.fire({
-                title: 'Error al copiar',
-                text: 'No se pudo copiar automáticamente. Copia este número manualmente:',
-                html: `<div class="bg-gray-100 p-3 rounded font-mono text-lg mt-2">${numero}</div>`,
-                icon: 'error',
-                confirmButtonText: 'Entendido'
-            })
+            console.error('Error al copiar:', error)
+            
+            // Método de respaldo: crear un input temporal y usar execCommand
+            try {
+                const textArea = document.createElement('textarea')
+                textArea.value = numero
+                textArea.style.position = 'fixed'
+                textArea.style.left = '-999999px'
+                textArea.style.top = '-999999px'
+                document.body.appendChild(textArea)
+                textArea.focus()
+                textArea.select()
+                
+                const successful = document.execCommand('copy')
+                document.body.removeChild(textArea)
+                
+                if (successful) {
+                    const Swal = await loadSwal()
+                    Swal.fire({
+                        title: '¡Copiado!',
+                        text: `Número ${numero} copiado al portapapeles (método alternativo)`,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    })
+                } else {
+                    throw new Error('No se pudo copiar con método alternativo')
+                }
+            } catch (fallbackError) {
+                console.error('Error en método de respaldo:', fallbackError)
+                
+                // Si todo falla, mostrar el número para copia manual
+                const Swal = await loadSwal()
+                Swal.fire({
+                    title: 'Error al copiar',
+                    text: 'No se pudo copiar automáticamente. Copia este número manualmente:',
+                    html: `
+                        <div class="bg-gray-100 p-3 rounded font-mono text-lg mt-2 border" 
+                             style="user-select: all; cursor: pointer;"
+                             onclick="this.select(); document.execCommand('copy');"
+                             title="Haz click para seleccionar todo">
+                            ${numero}
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">💡 Haz click en el número para seleccionarlo</p>
+                    `,
+                    icon: 'warning',
+                    confirmButtonText: 'Entendido',
+                    width: 400
+                })
+            }
         }
     }, [])
 

@@ -1,7 +1,5 @@
 "use client"
-
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import Swal from 'sweetalert2'
 import { Button } from "@/components/ui/button"
@@ -16,10 +14,22 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover"
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
-import { Plus } from "lucide-react"
-//importar desde el lib/ las apis
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { 
     type RegistroBaseTIDto, 
     type AreaMedica,
@@ -79,7 +89,12 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     const [responsables, setResponsables] = useState<Responsable[]>([])
     
     const [formData, setFormData] = useState(initialFormData)
-    // (Removed in-dropdown search inputs: selects will show full option lists)
+    const [searchHospital, setSearchHospital] = useState("")
+    const [searchLis, setSearchLis] = useState("")
+    const [searchProvincia, setSearchProvincia] = useState("")
+    const [searchLicencia, setSearchLicencia] = useState("")
+    const [searchModalidad, setSearchModalidad] = useState("")
+    const [searchResponsable, setSearchResponsable] = useState("")
 
     const statusOptions = [
         { id: 'active', nombre: 'Activo' },
@@ -273,7 +288,97 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
         console.log("registroBaseTI original:", registroBaseTI)
         console.log("===================================")
     }
-    
+
+    const normalize = (str: string) =>
+    str
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    // Filtro mejorado para hospitales
+    const filteredHospitales = hospitalesList
+        .filter(h =>
+            !searchHospital || normalize(h.hospital_nombre).includes(normalize(searchHospital))
+        )
+        .sort((a, b) => {
+            const s = normalize(searchHospital);
+            const aName = normalize(a.hospital_nombre);
+            const bName = normalize(b.hospital_nombre);
+            const aStarts = aName.startsWith(s) ? -1 : 0;
+            const bStarts = bName.startsWith(s) ? -1 : 0;
+            return bStarts - aStarts || aName.localeCompare(bName);
+        });
+
+    // Filtro para LIS
+    const filteredLis = lisList
+        .filter(lis =>
+            !searchLis || normalize(lis.lis_nombre).includes(normalize(searchLis))
+        )
+        .sort((a, b) => {
+            const s = normalize(searchLis);
+            const aName = normalize(a.lis_nombre);
+            const bName = normalize(b.lis_nombre);
+            const aStarts = aName.startsWith(s) ? -1 : 0;
+            const bStarts = bName.startsWith(s) ? -1 : 0;
+            return bStarts - aStarts || aName.localeCompare(bName);
+        });
+
+    // Filtro para Provincia
+    const filteredProvincias = provincias
+        .filter(p =>
+            !searchProvincia || normalize(p.provincia_nombre).includes(normalize(searchProvincia))
+        )
+        .sort((a, b) => {
+            const s = normalize(searchProvincia);
+            const aName = normalize(a.provincia_nombre);
+            const bName = normalize(b.provincia_nombre);
+            const aStarts = aName.startsWith(s) ? -1 : 0;
+            const bStarts = bName.startsWith(s) ? -1 : 0;
+            return bStarts - aStarts || aName.localeCompare(bName);
+        });
+
+    // Filtro para Tipo de Licencia
+    const filteredLicencias = tiposLicencia
+        .filter(t =>
+            !searchLicencia || normalize(t.tipo_licencia).includes(normalize(searchLicencia))
+        )
+        .sort((a, b) => {
+            const s = normalize(searchLicencia);
+            const aName = normalize(a.tipo_licencia);
+            const bName = normalize(b.tipo_licencia);
+            const aStarts = aName.startsWith(s) ? -1 : 0;
+            const bStarts = bName.startsWith(s) ? -1 : 0;
+            return bStarts - aStarts || aName.localeCompare(bName);
+        });
+
+    // Filtro para Modalidad
+    const filteredModalidades = modalidades
+        .filter(m =>
+            !searchModalidad || normalize(m.modalidad_nombre).includes(normalize(searchModalidad))
+        )
+        .sort((a, b) => {
+            const s = normalize(searchModalidad);
+            const aName = normalize(a.modalidad_nombre);
+            const bName = normalize(b.modalidad_nombre);
+            const aStarts = aName.startsWith(s) ? -1 : 0;
+            const bStarts = bName.startsWith(s) ? -1 : 0;
+            return bStarts - aStarts || aName.localeCompare(bName);
+        });
+
+    // Filtro para Responsable
+    const filteredResponsables = responsables
+        .filter(r =>
+            !searchResponsable || normalize(r.nombre).includes(normalize(searchResponsable))
+        )
+        .sort((a, b) => {
+            const s = normalize(searchResponsable);
+            const aName = normalize(a.nombre);
+            const bName = normalize(b.nombre);
+            const aStarts = aName.startsWith(s) ? -1 : 0;
+            const bStarts = bName.startsWith(s) ? -1 : 0;
+            return bStarts - aStarts || aName.localeCompare(bName);
+        });
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-[95vw] sm:max-w-[600px] lg:max-w-[800px] max-h-[90vh] overflow-y-auto">
@@ -289,53 +394,50 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                     <div className="grid gap-4 py-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="hospital_id">Hospital / Cliente</Label>
-                            <Select
-                                key={`hospital_${formData.hospital_id}_${hospitalesList.length}`}
-                                value={formData.hospital_id}
-                                onValueChange={(value) => handleInputChange("hospital_id", value)}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Hospital"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {hospitalesList.map((h) => (
-                                        <SelectItem key={h.hospital_id} value={h.hospital_id.toString()}>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className="w-full justify-between"
+                                    disabled={loadingData}
+                                >
+                                    {formData.hospital_id
+                                    ? hospitalesList.find(h => h.hospital_id.toString() === formData.hospital_id)?.hospital_nombre
+                                    : (loadingData ? "Cargando..." : "Seleccionar Hospital")}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
+                                <Command className="w-full">
+                                    <div className="sticky top-0 bg-white z-10 p-2">
+                                        <CommandInput placeholder="Buscar hospital..." value={searchHospital} onValueChange={setSearchHospital}/>
+                                    </div>
+                                    <CommandList className="max-h-[45vh] overflow-y-auto">
+                                    <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                    <CommandGroup>
+                                        {filteredHospitales.map(h => (
+                                        <CommandItem
+                                            key={h.hospital_id}
+                                            value={h.hospital_nombre}
+                                            onSelect={() => handleInputChange("hospital_id", h.hospital_id.toString())}
+                                        >
+                                            <Check
+                                            className={cn(
+                                                "mr-2 h-4 w-4",
+                                                formData.hospital_id === h.hospital_id.toString()
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                            )}
+                                            />
                                             {h.hospital_nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="version">Versión</Label>
-                            <Input
-                                id="version"
-                                value={formData.version}
-                                onChange={(e) => handleInputChange("version", e.target.value)}
-                                required
-                                placeholder="Versión"
-                            />
-                        </div>
-                        <div className="grid gap-2 col-span-1">
-                            <Label htmlFor="area_medica_id">Área Médica</Label>
-                            <Select
-                                key={`area_medica_${formData.area_medica_id}_${areasMedicas.length}`}
-                                value={formData.area_medica_id}
-                                onValueChange={(value) => handleInputChange("area_medica_id", value)}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Área Médica"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {areasMedicas.map((area) => (
-                                        <SelectItem key={area.area_medica_id} value={area.area_medica_id.toString()}>
-                                            {area.area_medica_nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                        </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="grid gap-2 col-span-1">
                             <Label htmlFor="equipo">Equipo</Label>
@@ -349,103 +451,238 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="lis_id">LIS</Label>
-                            <Select
-                                key={`lis_${formData.lis_id}_${lisList.length}`}
-                                value={formData.lis_id}
-                                onValueChange={(value) => handleInputChange("lis_id", value)}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar LIS"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {lisList.map((lis) => (
-                                        <SelectItem key={lis.lis_id} value={lis.lis_id.toString()}>
-                                            {lis.lis_nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="w-full justify-between"
+                                        disabled={loadingData}
+                                    >
+                                        {formData.lis_id
+                                            ? lisList.find(lis => lis.lis_id.toString() === formData.lis_id)?.lis_nombre
+                                            : (loadingData ? "Cargando..." : "Seleccionar LIS")}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
+                                    <Command className="w-full">
+                                        <div className="sticky top-0 bg-white z-10 p-2">
+                                            <CommandInput placeholder="Buscar LIS..." value={searchLis} onValueChange={setSearchLis} />
+                                        </div>
+                                        <CommandList className="max-h-[45vh] overflow-y-auto">
+                                            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredLis.map(lis => (
+                                                    <CommandItem
+                                                        key={lis.lis_id}
+                                                        value={lis.lis_nombre}
+                                                        onSelect={() => handleInputChange("lis_id", lis.lis_id.toString())}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.lis_id === lis.lis_id.toString()
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {lis.lis_nombre}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="provincia_id">Provincia</Label>
-                            <Select
-                                key={`provincia_${formData.provincia_id}_${provincias.length}`}
-                                value={formData.provincia_id}
-                                onValueChange={(value) => handleInputChange("provincia_id", value)}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Provincia"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {provincias.map((provincia) => (
-                                        <SelectItem key={provincia.provincia_id} value={provincia.provincia_id.toString()}>
-                                            {provincia.provincia_nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="w-full justify-between"
+                                        disabled={loadingData}
+                                    >
+                                        {formData.provincia_id
+                                            ? provincias.find(p => p.provincia_id.toString() === formData.provincia_id)?.provincia_nombre
+                                            : (loadingData ? "Cargando..." : "Seleccionar Provincia")}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
+                                    <Command className="w-full">
+                                        <div className="sticky top-0 bg-white z-10 p-2">
+                                            <CommandInput placeholder="Buscar provincia..." value={searchProvincia} onValueChange={setSearchProvincia} />
+                                        </div>
+                                        <CommandList className="max-h-[45vh] overflow-y-auto">
+                                            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredProvincias.map(provincia => (
+                                                    <CommandItem
+                                                        key={provincia.provincia_id}
+                                                        value={provincia.provincia_nombre}
+                                                        onSelect={() => handleInputChange("provincia_id", provincia.provincia_id.toString())}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.provincia_id === provincia.provincia_id.toString()
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {provincia.provincia_nombre}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="licencia_id">Tipo de Licencia</Label>
-                            <Select
-                                key={`licencia_${formData.licencia_id}_${tiposLicencia.length}`}
-                                value={formData.licencia_id}
-                                onValueChange={(value) => handleInputChange("licencia_id", value)}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Tipo de Licencia"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {tiposLicencia.map((tipo) => (
-                                        <SelectItem key={tipo.licencia_id} value={tipo.licencia_id.toString()}>
-                                            {tipo.tipo_licencia}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="w-full justify-between"
+                                        disabled={loadingData}
+                                    >
+                                        {formData.licencia_id
+                                            ? tiposLicencia.find(t => t.licencia_id.toString() === formData.licencia_id)?.tipo_licencia
+                                            : (loadingData ? "Cargando..." : "Seleccionar Tipo de Licencia")}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
+                                    <Command className="w-full">
+                                        <div className="sticky top-0 bg-white z-10 p-2">
+                                            <CommandInput placeholder="Buscar tipo de licencia..." value={searchLicencia} onValueChange={setSearchLicencia} />
+                                        </div>
+                                        <CommandList className="max-h-[45vh] overflow-y-auto">
+                                            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredLicencias.map(tipo => (
+                                                    <CommandItem
+                                                        key={tipo.licencia_id}
+                                                        value={tipo.tipo_licencia}
+                                                        onSelect={() => handleInputChange("licencia_id", tipo.licencia_id.toString())}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.licencia_id === tipo.licencia_id.toString()
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {tipo.tipo_licencia}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="modalidad_id">Modalidad</Label>
-                            <Select
-                                key={`modalidad_${formData.modalidad_id}_${modalidades.length}`}
-                                value={formData.modalidad_id}
-                                onValueChange={(value) => handleInputChange("modalidad_id", value)}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Modalidad"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {modalidades.map((modalidad) => (
-                                        <SelectItem key={modalidad.modalidad_id} value={modalidad.modalidad_id.toString()}>
-                                            {modalidad.modalidad_nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="w-full justify-between"
+                                        disabled={loadingData}
+                                    >
+                                        {formData.modalidad_id
+                                            ? modalidades.find(m => m.modalidad_id.toString() === formData.modalidad_id)?.modalidad_nombre
+                                            : (loadingData ? "Cargando..." : "Seleccionar Modalidad")}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
+                                    <Command className="w-full">
+                                        <div className="sticky top-0 bg-white z-10 p-2">
+                                            <CommandInput placeholder="Buscar modalidad..." value={searchModalidad} onValueChange={setSearchModalidad} />
+                                        </div>
+                                        <CommandList className="max-h-[45vh] overflow-y-auto">
+                                            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredModalidades.map(modalidad => (
+                                                    <CommandItem
+                                                        key={modalidad.modalidad_id}
+                                                        value={modalidad.modalidad_nombre}
+                                                        onSelect={() => handleInputChange("modalidad_id", modalidad.modalidad_id.toString())}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.modalidad_id === modalidad.modalidad_id.toString()
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {modalidad.modalidad_nombre}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="responsable_id">Responsable</Label>
-                            <Select
-                                key={`responsable_${formData.responsable_id}_${responsables.length}`}
-                                value={formData.responsable_id}
-                                onValueChange={(value) => handleInputChange("responsable_id", value)}
-                                disabled={loadingData}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Responsable"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {responsables.map((responsable) => (
-                                        <SelectItem key={responsable.responsable_id} value={responsable.responsable_id.toString()}>
-                                            {responsable.nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="w-full justify-between"
+                                        disabled={loadingData}
+                                    >
+                                        {formData.responsable_id
+                                            ? responsables.find(r => r.responsable_id.toString() === formData.responsable_id)?.nombre
+                                            : (loadingData ? "Cargando..." : "Seleccionar Responsable")}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
+                                    <Command className="w-full">
+                                        <div className="sticky top-0 bg-white z-10 p-2">
+                                            <CommandInput placeholder="Buscar responsable..." value={searchResponsable} onValueChange={setSearchResponsable} />
+                                        </div>
+                                        <CommandList className="max-h-[45vh] overflow-y-auto">
+                                            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredResponsables.map(responsable => (
+                                                    <CommandItem
+                                                        key={responsable.responsable_id}
+                                                        value={responsable.nombre}
+                                                        onSelect={() => handleInputChange("responsable_id", responsable.responsable_id.toString())}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.responsable_id === responsable.responsable_id.toString()
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {responsable.nombre}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="numero_proyecto">Número de Proyecto</Label>

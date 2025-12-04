@@ -22,6 +22,32 @@ export async function basicAuthenticatedFetch(url: string, options: RequestInit 
   
   return response;
 }
+
+// Variant that does not force a Content-Type header (useful for FormData uploads)
+export async function basicAuthenticatedFetchRaw(url: string, options: RequestInit = {}) {
+  const user = process.env.NEXT_PUBLIC_API_USER;
+  const pass = process.env.NEXT_PUBLIC_API_PASS;
+  const basic = typeof window === "undefined"
+    ? Buffer.from(`${user}:${pass}`).toString("base64")
+    : btoa(`${user}:${pass}`);
+
+  const fullUrl = `${API_BASE_URL}${url}`;
+  console.log('🔗 Petición RAW:', fullUrl);
+
+  const mergedHeaders: Record<string, string> = {
+    Authorization: `Basic ${basic}`,
+    ...((options && options.headers) as Record<string, string> || {}),
+  }
+
+  const response = await fetch(fullUrl, {
+    ...options,
+    headers: mergedHeaders,
+  });
+
+  console.log('📊 Status RAW:', response.status, response.statusText);
+
+  return response;
+}
 export interface User {
   id: string
   email: string

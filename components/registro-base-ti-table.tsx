@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Layers, Database, Hospital } from "lucide-react"
+import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Layers, Database, Hospital, Upload } from "lucide-react"
+import RegistroBaseTIPdfDialog from './registro-base-ti-pdf-dialog'
 import { 
     type RegistroBaseTIDto, 
     type AreaMedica,
@@ -32,7 +33,7 @@ const RegistroBaseTIDialog = lazy(() => import("./registro-base-ti-dialog").then
 const RegistroModulosDialog = lazy(() => import('./registro-modulos-dialog').then(module => ({
     default: module.RegistroModulosDialog
 })))
-
+// Note: RegistroBaseTIPdfDialog is imported directly to preserve prop typings
 
 // Interfaz extendida para la tabla que puede recibir objetos poblados
 // El backend devuelve los datos con nombres de relaciones (area_medica, lis, provincia)
@@ -69,6 +70,8 @@ export function RegistroBaseTITable() {
     const [modulosRegistroId, setModulosRegistroId] = useState<number | null>(null)
     const [modulosLisId, setModulosLisId] = useState<number | undefined>(undefined)
     const [modulosAreaId, setModulosAreaId] = useState<number | undefined>(undefined)
+    const [pdfDialogOpen, setPdfDialogOpen] = useState(false)
+    const [pdfRegistroId, setPdfRegistroId] = useState<number | null>(null)
     
     // Estados para paginación
     const [currentPage, setCurrentPage] = useState(1)
@@ -697,6 +700,14 @@ export function RegistroBaseTITable() {
                                                     Adicionales
                                                 </DropdownMenuItem>
 
+                                                <DropdownMenuItem onClick={() => {
+                                                    setPdfRegistroId(registro.registro_base_id || null)
+                                                    setPdfDialogOpen(true)
+                                                }}>
+                                                    <Upload className="mr-2 h-4 w-4" />
+                                                    Subir Documentos
+                                                </DropdownMenuItem>
+
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
@@ -802,6 +813,7 @@ export function RegistroBaseTITable() {
                     lis_id={modulosLisId}
                     onSaved={() => { loadRegistros(); setModulosRegistroId(null) }}
                 />
+                <RegistroBaseTIPdfDialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen} registroBaseId={pdfRegistroId} />
             </Suspense>
         </Card>
     )

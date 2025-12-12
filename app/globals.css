@@ -143,24 +143,30 @@
   background: rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Asegurar que SweetAlert2 esté por encima de Radix Dialog */
+/* Asegurar que SweetAlert2 esté por encima de Radix Dialog y cualquier otro componente */
 .swal2-container {
-  z-index: 10000 !important;
+  z-index: 99999 !important;
 }
 
 .swal2-popup {
-  z-index: 10001 !important;
+  z-index: 100000 !important;
 }
 
 .swal2-backdrop-show {
-  z-index: 9999 !important;
+  z-index: 99998 !important;
 }
 
-/* Radix Dialog z-index */
+/* Radix Dialog z-index - valores más bajos para que SweetAlert aparezca encima */
 [data-radix-dialog-overlay] {
   z-index: 50 !important;
 }
 
 [data-radix-dialog-content] {
   z-index: 51 !important;
+}
+
+/* Radix Popover y Select - también valores controlados */
+[data-radix-popover-content],
+[data-radix-select-content] {
+  z-index: 52 !important;
 }

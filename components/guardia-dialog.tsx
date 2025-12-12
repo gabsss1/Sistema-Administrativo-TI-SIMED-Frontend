@@ -307,7 +307,7 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                         <div className="grid gap-2">
                             <Label htmlFor="responsable_id">Responsable</Label>
                             <Select
-                                value={formData.responsable_id}
+                                value={formData.responsable_id || undefined}
                                 onValueChange={(value) => handleInputChange("responsable_id", value)}
                                 disabled={loadingData}
                             >

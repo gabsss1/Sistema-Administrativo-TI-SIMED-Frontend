@@ -35,6 +35,11 @@ const navigation = [
     href: "/gestionar-guardias",
     icon: Calendar,
   },
+  {
+    name: "Planning",
+    href: "/planning",
+    icon: Calendar,
+  },
 ]
 
 export function AdminSidebar() {

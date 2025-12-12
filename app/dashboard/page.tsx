@@ -18,6 +18,7 @@ import DashboardModulosPorHospitales from '@/components/dashboard-modulos-por-ho
 // Accordion removed: replaced by hospitals dashboard component
 import { DashboardGuardiasStats } from "@/components/dashboard-guardias-stats"
 import DashboardLisHospitales from '@/components/dashboard-lis-hospitales'
+import DashboardPlanning from '@/components/dashboard-planning'
 import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
@@ -201,7 +202,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Estadísticas de Guardias */}
-      <DashboardGuardiasStats />
+      <div className="grid gap-4 md:grid-cols-2">
+        <DashboardGuardiasStats />
+        <DashboardPlanning />
+      </div>
     </div>
   )
 }

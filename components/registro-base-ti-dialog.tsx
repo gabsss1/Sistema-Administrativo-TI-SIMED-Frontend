@@ -72,6 +72,7 @@ const initialFormData = {
     numero_licencia: "",
     fecha_implentacion: "",
     codigo_centro: "",
+    codigo_anydesk: "",
     implementado: false,
 }
 
@@ -216,6 +217,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
                 codigo_centro: registroBaseTI.codigo_centro ? String(registroBaseTI.codigo_centro) : "",
+                codigo_anydesk: registroBaseTI.codigo_anydesk ? String(registroBaseTI.codigo_anydesk) : "",
                 implementado: registroBaseTI.implementado ?? false,
             });
         } else {
@@ -280,6 +282,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
                 codigo_centro: registroBaseTI.codigo_centro ? String(registroBaseTI.codigo_centro) : "",
+                codigo_anydesk: registroBaseTI.codigo_anydesk ? String(registroBaseTI.codigo_anydesk) : "",
                 implementado: registroBaseTI.implementado ?? false,
             });
         }
@@ -304,6 +307,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 numero_proyecto: formData.numero_proyecto,
                 numero_licencia: formData.numero_licencia,
                 codigo_centro: formData.codigo_centro || undefined,
+                codigo_anydesk: formData.codigo_anydesk || undefined,
                 implementado: formData.implementado,
             }
 
@@ -852,6 +856,14 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                                 value={formData.codigo_centro}
                                 onChange={(e) => handleInputChange("codigo_centro", e.target.value)}
                                 placeholder="Código Centro"
+                            />
+                        </div>
+                        <div className="grid gap-2">                            <Label htmlFor="codigo_anydesk">Código Anydesk</Label>
+                            <Input
+                                id="codigo_anydesk"
+                                value={formData.codigo_anydesk}
+                                onChange={(e) => handleInputChange("codigo_anydesk", e.target.value)}
+                                placeholder="Código Anydesk"
                             />
                         </div>
                         <div className="grid gap-2">

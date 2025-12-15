@@ -603,13 +603,12 @@ export function RegistroBaseTITable() {
                         <TableHeader>
                 <TableRow>
                     <TableHead>Hospital</TableHead>
-                                <TableHead className="hidden sm:table-cell">Versión</TableHead>
+                                <TableHead className="hidden sm:table-cell">Anydesk</TableHead>
                                 <TableHead className="hidden md:table-cell">Área Médica</TableHead>
                                 <TableHead>Equipo</TableHead>
                                 <TableHead className="hidden sm:table-cell">LIS</TableHead>
                                 <TableHead className="hidden md:table-cell">Modalidad</TableHead>
                                 <TableHead className="hidden lg:table-cell">Provincia</TableHead>
-                                <TableHead className="hidden lg:table-cell">Código Centro</TableHead>
                                 <TableHead className="hidden lg:table-cell">Fecha Implementación</TableHead>
                                 <TableHead className="hidden sm:table-cell">Implementación</TableHead>
                                 <TableHead className="hidden md:table-cell">Estado</TableHead>
@@ -622,7 +621,7 @@ export function RegistroBaseTITable() {
                                     <TableCell>
                                         {getHospitalName(registro)}
                                     </TableCell>
-                                    <TableCell className="hidden sm:table-cell">{registro.version}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{registro.codigo_anydesk || '-'}</TableCell>
                                     <TableCell className="hidden md:table-cell">
                                         {Array.isArray(registro.area_medicas) && registro.area_medicas.length > 0
                                             ? registro.area_medicas[0].area_medica_nombre
@@ -646,7 +645,6 @@ export function RegistroBaseTITable() {
                                             ? registro.provincia.provincia_nombre 
                                             : registro.provincia}
                                     </TableCell>
-                                    <TableCell className="hidden lg:table-cell">{registro.codigo_centro || '-'}</TableCell>
                                     <TableCell className="hidden lg:table-cell">
                                         {(registro as any).fecha_display || 
                                          (registro.fecha_implentacion 

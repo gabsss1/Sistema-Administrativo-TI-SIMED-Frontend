@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
-import { type AuthState, signIn as authSignIn, signOut as authSignOut, getStoredUser, storeUser } from "@/lib/auth"
+import { useRouter, usePathname } from "next/navigation"
+import { type AuthState, signIn as authSignIn, signOut as authSignOut, getStoredUser, storeUser, getAuthToken } from "@/lib/auth"
 
 interface AuthContextType extends AuthState {
-  signIn: (email: string, password: string) => Promise<boolean>
+  signIn: (usuario: string, contrasena: string) => Promise<boolean>
   signOut: () => Promise<void>
 }
 
@@ -16,28 +17,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: true,
     isAuthenticated: false,
   })
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
-    // Always authenticate without login - simplified for internal use
-    const defaultUser = {
-      id: "1",
-      email: "admin@simed.com",
-      name: "Administrador SIMED",
-      role: "admin" as const,
-    }
-    
-    setState({
-      user: defaultUser,
-      isLoading: false,
-      isAuthenticated: true,
-    })
-  }, [])
+    // Verificar si hay un token válido guardado
+    const token = getAuthToken()
+    const storedUser = getStoredUser()
 
-  const signIn = async (email: string, password: string): Promise<boolean> => {
+    if (token && storedUser) {
+      setState({
+        user: storedUser,
+        isLoading: false,
+        isAuthenticated: true,
+      })
+    } else {
+      setState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      })
+      
+      // Si no está en la página de login, redirigir
+      if (pathname !== "/login") {
+        router.push("/login")
+      }
+    }
+  }, [pathname, router])
+
+  const signIn = async (usuario: string, contrasena: string): Promise<boolean> => {
     setState((prev) => ({ ...prev, isLoading: true }))
 
     try {
-      const user = await authSignIn(email, password)
+      const user = await authSignIn(usuario, contrasena)
 
       if (user) {
         storeUser(user)
@@ -46,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLoading: false,
           isAuthenticated: true,
         })
+        router.push("/dashboard")
         return true
       } else {
         setState((prev) => ({ ...prev, isLoading: false }))
@@ -68,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
         isAuthenticated: false,
       })
+      router.push("/login")
     } catch (error) {
       setState((prev) => ({ ...prev, isLoading: false }))
     }

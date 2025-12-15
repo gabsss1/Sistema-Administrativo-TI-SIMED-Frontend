@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { basicAuthenticatedFetch } from '@/lib/auth'
+import { authenticatedFetch } from '@/lib/auth'
 import { useOptimizedFetch } from './use-optimized-fetch'
 
 interface Hospital {
@@ -10,7 +10,7 @@ interface Hospital {
 }
 
 async function fetchHospitales(): Promise<Hospital[]> {
-  const response = await basicAuthenticatedFetch('/hospitales')
+  const response = await authenticatedFetch('/hospitales')
   if (!response.ok) throw new Error('Error al cargar hospitales')
   return response.json()
 }

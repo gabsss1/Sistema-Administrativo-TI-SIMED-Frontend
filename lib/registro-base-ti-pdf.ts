@@ -1,4 +1,4 @@
-import { basicAuthenticatedFetch, basicAuthenticatedFetchRaw } from './auth'
+import { authenticatedFetch, authenticatedFetchRaw } from './auth'
 
 const endpointBase = '/registro-base-ti/pdf'
 
@@ -6,7 +6,7 @@ export async function subirPdf(registroId: number, file: File) {
 	const fd = new FormData()
 	fd.append('file', file)
 
-	const response = await basicAuthenticatedFetchRaw(`${endpointBase}/${registroId}`, {
+	const response = await authenticatedFetchRaw(`${endpointBase}/${registroId}`, {
 		method: 'POST',
 		body: fd,
 	})
@@ -25,7 +25,7 @@ export async function subirPdf(registroId: number, file: File) {
 export async function metadataPorRegistro(registro_base_id: number) {
 	const url = `${endpointBase}/by-registro/${registro_base_id}/ver`
 	// First try HEAD to avoid downloading the PDF body
-	let response = await basicAuthenticatedFetch(url, { method: 'HEAD' })
+	let response = await authenticatedFetch(url, { method: 'HEAD' })
 	if (response.ok) {
 		const cd = response.headers.get('content-disposition') || ''
 		const m = cd.match(/filename\*=UTF-8''(.+)$|filename="?([^";]+)"?/) || []
@@ -33,7 +33,7 @@ export async function metadataPorRegistro(registro_base_id: number) {
 		return { exists: true, filename }
 	}
 	// If HEAD is not allowed or returns non-OK, attempt GET but do not consume the body here.
-	response = await basicAuthenticatedFetch(url)
+	response = await authenticatedFetch(url)
 	if (response.ok) {
 		const cd = response.headers.get('content-disposition') || ''
 		const m = cd.match(/filename\*=UTF-8''(.+)$|filename="?([^";]+)"?/) || []
@@ -47,7 +47,7 @@ export async function metadataPorRegistro(registro_base_id: number) {
 // Download the PDF served by the controller for a registro (reads from /by-registro/:id/ver)
 export async function verPdfPorRegistro(registro_base_id: number): Promise<Blob> {
 	const url = `${endpointBase}/by-registro/${registro_base_id}/ver`
-	const response = await basicAuthenticatedFetch(url)
+	const response = await authenticatedFetch(url)
 	if (!response.ok) {
 		const text = await response.text().catch(() => '')
 		throw new Error(`Error descargando PDF por registro: ${response.status} ${text}`)
@@ -58,7 +58,7 @@ export async function verPdfPorRegistro(registro_base_id: number): Promise<Blob>
 // Delete the PDF associated to a registro (controller: DELETE /by-registro/:registro_base_id)
 export async function eliminarPdfPorRegistro(registro_base_id: number) {
 	const url = `${endpointBase}/by-registro/${registro_base_id}`
-	const response = await basicAuthenticatedFetch(url, { method: 'DELETE' })
+	const response = await authenticatedFetch(url, { method: 'DELETE' })
 	if (!response.ok) {
 		const text = await response.text().catch(() => '')
 		throw new Error(`Error eliminando PDF por registro: ${response.status} ${text}`)

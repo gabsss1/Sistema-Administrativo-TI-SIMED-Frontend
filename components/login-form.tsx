@@ -8,12 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Lock, Mail } from "lucide-react"
+import { Loader2, Lock, User } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [usuario, setUsuario] = useState("")
+  const [contrasena, setContrasena] = useState("")
   const [error, setError] = useState("")
   const { signIn, isLoading } = useAuth()
 
@@ -21,15 +21,15 @@ export function LoginForm() {
     e.preventDefault()
     setError("")
 
-    if (!email || !password) {
+    if (!usuario || !contrasena) {
       setError("Por favor, completa todos los campos")
       return
     }
 
-    const success = await signIn(email, password)
+    const success = await signIn(usuario, contrasena)
 
     if (!success) {
-      setError("Credenciales inválidas. Verifica tu email y contraseña")
+      setError("Credenciales inválidas. Verifica tu usuario y contraseña")
     }
   }
 
@@ -48,33 +48,35 @@ export function LoginForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="usuario">Usuario</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="usuario"
+                  type="text"
+                  placeholder="Usuario"
+                  value={usuario}
+                  onChange={(e) => setUsuario(e.target.value)}
                   className="pl-10"
                   disabled={isLoading}
+                  autoComplete="username"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="contrasena">Contraseña</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="password"
+                  id="contrasena"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={contrasena}
+                  onChange={(e) => setContrasena(e.target.value)}
                   className="pl-10"
                   disabled={isLoading}
+                  autoComplete="current-password"
                 />
               </div>
             </div>
@@ -96,10 +98,6 @@ export function LoginForm() {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Conecta con tu backend NestJS en el puerto 3001</p>
-          </div>
         </CardContent>
       </Card>
     </div>

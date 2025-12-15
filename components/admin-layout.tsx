@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useAuth } from "@/hooks/use-auth"
 import { AdminSidebar } from "./admin-sidebar"
-import { LoginForm } from "./login-form"
 import { Loader2 } from "lucide-react"
 
 interface AdminLayoutProps {
@@ -12,7 +11,7 @@ interface AdminLayoutProps {
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { isLoading } = useAuth()
+  const { isLoading, isAuthenticated } = useAuth()
 
   if (isLoading) {
     return (
@@ -23,6 +22,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </div>
     )
+  }
+
+  // El middleware se encarga de redirigir a /login si no está autenticado
+  // pero agregamos esta verificación adicional por seguridad
+  if (!isAuthenticated) {
+    return null
   }
 
   return (

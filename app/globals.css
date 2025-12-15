@@ -156,6 +156,22 @@
   z-index: 99998 !important;
 }
 
+/* SweetAlert2 en esquina superior derecha */
+.swal2-top-end-container {
+  z-index: 100000 !important;
+}
+
+.swal2-container.swal2-top-end {
+  z-index: 100000 !important;
+  top: 1rem !important;
+  right: 1rem !important;
+}
+
+.swal2-container.swal2-top-end .swal2-popup {
+  max-width: 400px !important;
+  margin: 0 !important;
+}
+
 /* Radix Dialog z-index - valores más bajos para que SweetAlert aparezca encima */
 [data-radix-dialog-overlay] {
   z-index: 50 !important;

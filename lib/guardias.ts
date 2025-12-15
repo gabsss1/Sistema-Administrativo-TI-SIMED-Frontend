@@ -1,4 +1,4 @@
-import { basicAuthenticatedFetch } from "./auth"
+import { authenticatedFetch } from "./auth"
 
 // Interfaces para Guardias
 export interface Guardia {
@@ -30,14 +30,14 @@ export interface UpdateGuardiaDto extends Partial<CreateGuardiaDto> {}
 
 // API Functions para Guardias
 export async function getGuardias() {
-  const response = await basicAuthenticatedFetch("/guardia")
+  const response = await authenticatedFetch("/guardia")
   if (!response.ok) throw new Error("Error fetching guardias")
   return response.json()
 }
 
 export async function getGuardiasPorCalendario(year: number, month: number): Promise<Guardia[]> {
   try {
-    const response = await basicAuthenticatedFetch(`/guardia/calendario?year=${year}&month=${month}`)
+    const response = await authenticatedFetch(`/guardia/calendario?year=${year}&month=${month}`)
     
     if (!response.ok) {
       console.error('❌ Error HTTP:', response.status, response.statusText);
@@ -64,13 +64,13 @@ export async function getGuardiasPorCalendario(year: number, month: number): Pro
 }
 
 export async function getGuardiasPorSemana(fechaInicio: string, fechaFin: string): Promise<Guardia[]> {
-  const response = await basicAuthenticatedFetch(`/guardia/semana?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`)
+  const response = await authenticatedFetch(`/guardia/semana?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`)
   if (!response.ok) throw new Error("Error fetching guardias por semana")
   return response.json()
 }
 
 export async function createGuardia(guardiaData: CreateGuardiaDto) {
-  const response = await basicAuthenticatedFetch("/guardia", {
+  const response = await authenticatedFetch("/guardia", {
     method: "POST",
     body: JSON.stringify(guardiaData),
   })
@@ -79,7 +79,7 @@ export async function createGuardia(guardiaData: CreateGuardiaDto) {
 }
 
 export async function updateGuardia(id: number, guardiaData: UpdateGuardiaDto) {
-  const response = await basicAuthenticatedFetch(`/guardia/${id}`, {
+  const response = await authenticatedFetch(`/guardia/${id}`, {
     method: "PUT",
     body: JSON.stringify(guardiaData),
   })
@@ -88,7 +88,7 @@ export async function updateGuardia(id: number, guardiaData: UpdateGuardiaDto) {
 }
 
 export async function deleteGuardia(id: number) {
-  const response = await basicAuthenticatedFetch(`/guardia/${id}`, {
+  const response = await authenticatedFetch(`/guardia/${id}`, {
     method: "DELETE",
   })
   if (!response.ok) throw new Error("Error deleting guardia")
@@ -96,13 +96,13 @@ export async function deleteGuardia(id: number) {
 }
 
 export async function getEstadisticasGuardias(year: number, month: number) {
-  const response = await basicAuthenticatedFetch(`/guardia/estadisticas?year=${year}&month=${month}`)
+  const response = await authenticatedFetch(`/guardia/estadisticas?year=${year}&month=${month}`)
   if (!response.ok) throw new Error("Error fetching estadisticas")
   return response.json()
 }
 
 export async function descargarExcelGuardias(year: number, month: number) {
-  const response = await basicAuthenticatedFetch(`/guardia/excel?year=${year}&month=${month}`)
+  const response = await authenticatedFetch(`/guardia/excel?year=${year}&month=${month}`)
   if (!response.ok) throw new Error("Error generando Excel")
   
   const blob = await response.blob()
@@ -153,7 +153,7 @@ export interface EstadisticasPorMes {
 
 export async function getEstadisticasGuardiasPorMes(year: number, month: number): Promise<EstadisticasPorMes> {
   try {
-    const response = await basicAuthenticatedFetch(`/guardia/estadisticas?year=${year}&month=${month}`)
+    const response = await authenticatedFetch(`/guardia/estadisticas?year=${year}&month=${month}`)
     
     if (!response.ok) {
       if (response.status === 404) {

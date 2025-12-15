@@ -27,11 +27,6 @@ const navigation = [
     icon: Computer,
   },
   {
-    name: "Anydesk",
-    href: "/anydesk",
-    icon: Monitor,
-  },
-  {
     name: "Gestionar Guardias",
     href: "/gestionar-guardias",
     icon: Calendar,
@@ -121,7 +116,7 @@ export function AdminSidebar() {
                   {user?.name || user?.usuario}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate">
-                  {user?.role === 'ADMIN' ? 'Administrador' : user?.role}
+                  {user?.role === 'ADMIN' ? 'Administrador' : user?.role === 'USER' ? 'Usuario' : user?.role}
                 </p>
               </div>
             </div>

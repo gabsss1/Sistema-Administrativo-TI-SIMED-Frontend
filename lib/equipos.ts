@@ -1,4 +1,4 @@
-import { basicAuthenticatedFetch } from './auth'
+import { authenticatedFetch } from './auth'
 
 // Tipos para los enums
 export enum TipoEquipo {
@@ -53,7 +53,7 @@ export interface UpdateEquipoData extends Partial<CreateEquipoData> {}
 // API Functions
 export async function getEquiposList(): Promise<Equipo[]> {
   try {
-    const response = await basicAuthenticatedFetch('/equipos')
+    const response = await authenticatedFetch('/equipos')
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`)
     }
@@ -66,7 +66,7 @@ export async function getEquiposList(): Promise<Equipo[]> {
 
 export async function getEquipo(id: number): Promise<Equipo> {
   try {
-    const response = await basicAuthenticatedFetch(`/equipos/${id}`)
+    const response = await authenticatedFetch(`/equipos/${id}`)
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`)
     }
@@ -79,7 +79,7 @@ export async function getEquipo(id: number): Promise<Equipo> {
 
 export async function createEquipo(data: CreateEquipoData): Promise<Equipo> {
   try {
-    const response = await basicAuthenticatedFetch('/equipos', {
+    const response = await authenticatedFetch('/equipos', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ export async function createEquipo(data: CreateEquipoData): Promise<Equipo> {
 
 export async function updateEquipo(id: number, data: UpdateEquipoData): Promise<Equipo> {
   try {
-    const response = await basicAuthenticatedFetch(`/equipos/${id}`, {
+    const response = await authenticatedFetch(`/equipos/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export async function updateEquipo(id: number, data: UpdateEquipoData): Promise<
 
 export async function deleteEquipo(id: number): Promise<void> {
   try {
-    const response = await basicAuthenticatedFetch(`/equipos/${id}`, {
+    const response = await authenticatedFetch(`/equipos/${id}`, {
       method: 'DELETE',
     })
 

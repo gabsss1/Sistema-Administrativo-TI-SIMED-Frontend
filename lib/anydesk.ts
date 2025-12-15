@@ -1,4 +1,4 @@
-import { basicAuthenticatedFetch } from "./auth"
+import { authenticatedFetch } from "./auth"
 
 export interface Anydesk {
   anydesk_id: number
@@ -25,19 +25,19 @@ export interface UpdateAnydeskDto extends Partial<CreateAnydeskDto> {
 // API functions para Anydesk
 export async function getAnydeskList(search?: string): Promise<Anydesk[]> {
   const queryParam = search ? `?search=${encodeURIComponent(search)}` : ""
-  const response = await basicAuthenticatedFetch(`/anydesk${queryParam}`)
+  const response = await authenticatedFetch(`/anydesk${queryParam}`)
   if (!response.ok) throw new Error("Error fetching anydesk list")
   return response.json()
 }
 
 export async function getAnydeskById(id: number): Promise<Anydesk> {
-  const response = await basicAuthenticatedFetch(`/anydesk/${id}`)
+  const response = await authenticatedFetch(`/anydesk/${id}`)
   if (!response.ok) throw new Error("Error fetching anydesk by id")
   return response.json()
 }
 
 export async function createAnydesk(data: CreateAnydeskDto): Promise<Anydesk> {
-  const response = await basicAuthenticatedFetch("/anydesk", {
+  const response = await authenticatedFetch("/anydesk", {
     method: "POST",
     body: JSON.stringify(data),
   })
@@ -46,7 +46,7 @@ export async function createAnydesk(data: CreateAnydeskDto): Promise<Anydesk> {
 }
 
 export async function updateAnydesk(id: number, data: Partial<CreateAnydeskDto>): Promise<Anydesk> {
-  const response = await basicAuthenticatedFetch(`/anydesk/${id}`, {
+  const response = await authenticatedFetch(`/anydesk/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
   })
@@ -55,7 +55,7 @@ export async function updateAnydesk(id: number, data: Partial<CreateAnydeskDto>)
 }
 
 export async function deleteAnydesk(id: number): Promise<void> {
-  const response = await basicAuthenticatedFetch(`/anydesk/${id}`, {
+  const response = await authenticatedFetch(`/anydesk/${id}`, {
     method: "DELETE",
   })
   if (!response.ok) throw new Error("Error deleting anydesk")

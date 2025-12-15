@@ -2,8 +2,9 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/use-auth"
 
-import { LayoutDashboard, Database, Calendar, Menu, X, Cast, File, Monitor, Computer } from "lucide-react"
+import { LayoutDashboard, Database, Calendar, Menu, X, Cast, File, Monitor, Computer, LogOut, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -44,8 +45,12 @@ const navigation = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
-
+  const { user, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
 
   return (
     <>
@@ -105,7 +110,31 @@ export function AdminSidebar() {
             })}
           </nav>
 
-
+          {/* User section at bottom */}
+          <div className="p-4 border-t border-sidebar-border">
+            <div className="flex items-center gap-3 px-3 py-2 mb-2 rounded-lg bg-sidebar-accent/50">
+              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {user?.name || user?.usuario}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">
+                  {user?.role === 'ADMIN' ? 'Administrador' : user?.role}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar Sesión
+            </Button>
+          </div>
         </div>
       </div>
 

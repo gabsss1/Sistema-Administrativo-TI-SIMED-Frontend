@@ -90,6 +90,7 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     
     const [formData, setFormData] = useState(initialFormData)
     const [searchHospital, setSearchHospital] = useState("")
+    const [searchAreaMedica, setSearchAreaMedica] = useState("")
     const [searchLis, setSearchLis] = useState("")
     const [searchProvincia, setSearchProvincia] = useState("")
     const [searchLicencia, setSearchLicencia] = useState("")
@@ -139,7 +140,15 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                         title: 'Error al cargar opciones',
                         text: 'No se pudieron cargar las opciones de los campos. Cierra el diálogo e inténtalo de nuevo.',
                         icon: 'error',
-                        confirmButtonText: 'Entendido'
+                        confirmButtonText: 'Entendido',
+                        position: 'top-end',
+                        toast: true,
+                        timer: 5000,
+                        timerProgressBar: true,
+                        showConfirmButton: true,
+                        customClass: {
+                            container: 'swal2-top-end-container'
+                        }
                     })
                 } finally {
                     setLoadingData(false)
@@ -152,10 +161,45 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     useEffect(() => {
         if (registroBaseTI) {
             console.log('✏️ Abriendo diálogo de edición con registroBaseTI:', registroBaseTI);
-            // area_medica ahora es un campo único; se procesa más abajo
-            // Preparar hospital y area_medica si vienen
-            const hospital_id = (registroBaseTI as any).hospitales ? String(((registroBaseTI as any).hospitales[0]?.hospital_id) || ((registroBaseTI as any).hospitales as any)?.hospital_id || "") : ((registroBaseTI as any).hospital_id ? String((registroBaseTI as any).hospital_id) : "")
-            const area_medica_id = (registroBaseTI as any).area_medica_ids && Array.isArray((registroBaseTI as any).area_medica_ids) && (registroBaseTI as any).area_medica_ids.length > 0 ? String((registroBaseTI as any).area_medica_ids[0]) : ((registroBaseTI as any).area_medica_id ? String((registroBaseTI as any).area_medica_id) : "")
+            
+            // Parsear hospital_id
+            const hospital_id = (registroBaseTI as any).hospitales 
+                ? String(((registroBaseTI as any).hospitales[0]?.hospital_id) || ((registroBaseTI as any).hospitales as any)?.hospital_id || "") 
+                : ((registroBaseTI as any).hospital_id ? String((registroBaseTI as any).hospital_id) : "")
+            
+            // Parsear area_medica_id - puede venir como objeto area_medica o directamente como area_medica_id
+            let area_medica_id = "";
+            if ((registroBaseTI as any).area_medica?.area_medica_id) {
+                area_medica_id = String((registroBaseTI as any).area_medica.area_medica_id);
+            } else if ((registroBaseTI as any).area_medica_id) {
+                area_medica_id = String((registroBaseTI as any).area_medica_id);
+            }
+            
+            // Parsear lis_id
+            const lis_id = (registroBaseTI as any).lis?.lis_id 
+                ? String((registroBaseTI as any).lis.lis_id) 
+                : (registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "");
+            
+            // Parsear provincia_id
+            const provincia_id = (registroBaseTI as any).provincia?.provincia_id 
+                ? String((registroBaseTI as any).provincia.provincia_id) 
+                : (registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "");
+            
+            // Parsear licencia_id
+            const licencia_id = (registroBaseTI as any).tipo_licencia?.licencia_id 
+                ? String((registroBaseTI as any).tipo_licencia.licencia_id) 
+                : (registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "");
+            
+            // Parsear modalidad_id
+            const modalidad_id = (registroBaseTI as any).modalidad?.modalidad_id 
+                ? String((registroBaseTI as any).modalidad.modalidad_id) 
+                : (registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "");
+            
+            // Parsear responsable_id
+            const responsable_id = (registroBaseTI as any).responsable?.responsable_id 
+                ? String((registroBaseTI as any).responsable.responsable_id) 
+                : (registroBaseTI.responsable_id !== undefined && registroBaseTI.responsable_id !== null ? String(registroBaseTI.responsable_id) : "");
+            
             setFormData({
                 ...initialFormData,
                 hospital_id,
@@ -163,11 +207,11 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 area_medica_id,
                 equipo: registroBaseTI.equipo ? String(registroBaseTI.equipo) : "",
                 status: registroBaseTI.status ?? true,
-                lis_id: registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "",
-                provincia_id: registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "",
-                licencia_id: registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "",
-                modalidad_id: registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "",
-                responsable_id: registroBaseTI.responsable_id !== undefined && registroBaseTI.responsable_id !== null ? String(registroBaseTI.responsable_id) : "",
+                lis_id,
+                provincia_id,
+                licencia_id,
+                modalidad_id,
+                responsable_id,
                 numero_proyecto: registroBaseTI.numero_proyecto ? String(registroBaseTI.numero_proyecto) : "",
                 numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
@@ -183,8 +227,43 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
     useEffect(() => {
         if (registroBaseTI && !loadingData && tiposLicencia.length > 0 && areasMedicas.length > 0) {
             // Re-establecer formData ahora que las opciones están cargadas
-            const hospital_id = (registroBaseTI as any).hospitales ? String(((registroBaseTI as any).hospitales[0]?.hospital_id) || ((registroBaseTI as any).hospitales as any)?.hospital_id || "") : ((registroBaseTI as any).hospital_id ? String((registroBaseTI as any).hospital_id) : "")
-            const area_medica_id = (registroBaseTI as any).area_medica_ids && Array.isArray((registroBaseTI as any).area_medica_ids) && (registroBaseTI as any).area_medica_ids.length > 0 ? String((registroBaseTI as any).area_medica_ids[0]) : ((registroBaseTI as any).area_medica_id ? String((registroBaseTI as any).area_medica_id) : "")
+            const hospital_id = (registroBaseTI as any).hospitales 
+                ? String(((registroBaseTI as any).hospitales[0]?.hospital_id) || ((registroBaseTI as any).hospitales as any)?.hospital_id || "") 
+                : ((registroBaseTI as any).hospital_id ? String((registroBaseTI as any).hospital_id) : "")
+            
+            // Parsear area_medica_id
+            let area_medica_id = "";
+            if ((registroBaseTI as any).area_medica?.area_medica_id) {
+                area_medica_id = String((registroBaseTI as any).area_medica.area_medica_id);
+            } else if ((registroBaseTI as any).area_medica_id) {
+                area_medica_id = String((registroBaseTI as any).area_medica_id);
+            }
+            
+            // Parsear lis_id
+            const lis_id = (registroBaseTI as any).lis?.lis_id 
+                ? String((registroBaseTI as any).lis.lis_id) 
+                : (registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "");
+            
+            // Parsear provincia_id
+            const provincia_id = (registroBaseTI as any).provincia?.provincia_id 
+                ? String((registroBaseTI as any).provincia.provincia_id) 
+                : (registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "");
+            
+            // Parsear licencia_id
+            const licencia_id = (registroBaseTI as any).tipo_licencia?.licencia_id 
+                ? String((registroBaseTI as any).tipo_licencia.licencia_id) 
+                : (registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "");
+            
+            // Parsear modalidad_id
+            const modalidad_id = (registroBaseTI as any).modalidad?.modalidad_id 
+                ? String((registroBaseTI as any).modalidad.modalidad_id) 
+                : (registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "");
+            
+            // Parsear responsable_id
+            const responsable_id = (registroBaseTI as any).responsable?.responsable_id 
+                ? String((registroBaseTI as any).responsable.responsable_id) 
+                : (registroBaseTI.responsable_id !== undefined && registroBaseTI.responsable_id !== null ? String(registroBaseTI.responsable_id) : "");
+            
             setFormData({
                 ...initialFormData,
                 hospital_id,
@@ -192,11 +271,11 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 area_medica_id,
                 equipo: registroBaseTI.equipo ? String(registroBaseTI.equipo) : "",
                 status: registroBaseTI.status ?? true,
-                lis_id: registroBaseTI.lis_id !== undefined && registroBaseTI.lis_id !== null ? String(registroBaseTI.lis_id) : "",
-                provincia_id: registroBaseTI.provincia_id !== undefined && registroBaseTI.provincia_id !== null ? String(registroBaseTI.provincia_id) : "",
-                licencia_id: registroBaseTI.licencia_id !== undefined && registroBaseTI.licencia_id !== null ? String(registroBaseTI.licencia_id) : "",
-                modalidad_id: registroBaseTI.modalidad_id !== undefined && registroBaseTI.modalidad_id !== null ? String(registroBaseTI.modalidad_id) : "",
-                responsable_id: registroBaseTI.responsable_id !== undefined && registroBaseTI.responsable_id !== null ? String(registroBaseTI.responsable_id) : "",
+                lis_id,
+                provincia_id,
+                licencia_id,
+                modalidad_id,
+                responsable_id,
                 numero_proyecto: registroBaseTI.numero_proyecto ? String(registroBaseTI.numero_proyecto) : "",
                 numero_licencia: registroBaseTI.numero_licencia ? String(registroBaseTI.numero_licencia) : "",
                 fecha_implentacion: registroBaseTI.fecha_implentacion ? String(registroBaseTI.fecha_implentacion) : "",
@@ -212,26 +291,20 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
         try {
             // Convertir los strings a números para enviar al backend
             const dataToSend: RegistroBaseTIDto = {
+                hospital_id: parseInt(formData.hospital_id),
                 version: formData.version,
+                area_medica_id: parseInt(formData.area_medica_id),
                 equipo: formData.equipo,
                 status: formData.status,
-                lis_id: parseInt(formData.lis_id) || 0,
-                provincia_id: parseInt(formData.provincia_id) || 0,
-                licencia_id: parseInt(formData.licencia_id) || 0,
-                modalidad_id: parseInt(formData.modalidad_id) || 0,
-                responsable_id: parseInt(formData.responsable_id) || 0,
+                lis_id: parseInt(formData.lis_id),
+                provincia_id: parseInt(formData.provincia_id),
+                licencia_id: parseInt(formData.licencia_id),
+                modalidad_id: parseInt(formData.modalidad_id),
+                responsable_id: parseInt(formData.responsable_id),
                 numero_proyecto: formData.numero_proyecto,
                 numero_licencia: formData.numero_licencia,
                 codigo_centro: formData.codigo_centro || undefined,
                 implementado: formData.implementado,
-            }
-
-            // Incluir hospital_id y area_medica_id si están presentes
-            if ((formData as any).hospital_id) {
-                (dataToSend as any).hospital_id = parseInt((formData as any).hospital_id)
-            }
-            if ((formData as any).area_medica_id) {
-                (dataToSend as any).area_medica_id = parseInt((formData as any).area_medica_id)
             }
 
             // Solo incluir fecha_implentacion si está implementado
@@ -253,7 +326,15 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                 title: 'Error al guardar',
                 text: 'Hubo un problema al guardar el registro. Verifica los datos e inténtalo de nuevo.',
                 icon: 'error',
-                confirmButtonText: 'Entendido'
+                confirmButtonText: 'Entendido',
+                position: 'top-end',
+                toast: true,
+                timer: 5000,
+                timerProgressBar: true,
+                showConfirmButton: true,
+                customClass: {
+                    container: 'swal2-top-end-container'
+                }
             })
         } finally {
             setLoading(false)
@@ -304,6 +385,20 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
             const s = normalize(searchHospital);
             const aName = normalize(a.hospital_nombre);
             const bName = normalize(b.hospital_nombre);
+            const aStarts = aName.startsWith(s) ? -1 : 0;
+            const bStarts = bName.startsWith(s) ? -1 : 0;
+            return bStarts - aStarts || aName.localeCompare(bName);
+        });
+
+    // Filtro para áreas médicas
+    const filteredAreasMedicas = areasMedicas
+        .filter(area =>
+            !searchAreaMedica || normalize(area.area_medica_nombre).includes(normalize(searchAreaMedica))
+        )
+        .sort((a, b) => {
+            const s = normalize(searchAreaMedica);
+            const aName = normalize(a.area_medica_nombre);
+            const bName = normalize(b.area_medica_nombre);
             const aStarts = aName.startsWith(s) ? -1 : 0;
             const bStarts = bName.startsWith(s) ? -1 : 0;
             return bStarts - aStarts || aName.localeCompare(bName);
@@ -448,6 +543,63 @@ export function RegistroBaseTIDialog({ open, onOpenChange, registroBaseTI, onReg
                                 required
                                 placeholder="Equipo"
                             />
+                        </div>
+                        <div className="grid gap-2 col-span-1">
+                            <Label htmlFor="version">Versión <span className="text-red-500">*</span></Label>
+                            <Input
+                                id="version"
+                                value={formData.version}
+                                onChange={(e) => handleInputChange("version", e.target.value)}
+                                required
+                                placeholder="Versión"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="area_medica_id">Área Médica</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        className="w-full justify-between"
+                                        disabled={loadingData}
+                                    >
+                                        {formData.area_medica_id
+                                            ? areasMedicas.find(area => area.area_medica_id.toString() === formData.area_medica_id)?.area_medica_nombre
+                                            : (loadingData ? "Cargando..." : "Seleccionar Área Médica")}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
+                                    <Command className="w-full">
+                                        <div className="sticky top-0 bg-white z-10 p-2">
+                                            <CommandInput placeholder="Buscar área médica..." value={searchAreaMedica} onValueChange={setSearchAreaMedica} />
+                                        </div>
+                                        <CommandList className="max-h-[45vh] overflow-y-auto">
+                                            <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                            <CommandGroup>
+                                                {filteredAreasMedicas.map(area => (
+                                                    <CommandItem
+                                                        key={area.area_medica_id}
+                                                        value={area.area_medica_nombre}
+                                                        onSelect={() => handleInputChange("area_medica_id", area.area_medica_id.toString())}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                formData.area_medica_id === area.area_medica_id.toString()
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {area.area_medica_nombre}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="lis_id">LIS</Label>

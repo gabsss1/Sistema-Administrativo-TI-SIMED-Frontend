@@ -1,21 +1,21 @@
-import { basicAuthenticatedFetch, basicAuthenticatedFetchRaw } from './auth'
+import { authenticatedFetch, authenticatedFetchRaw } from './auth'
 
 const base = '/planning'
 
 export async function fetchPlannings() {
-  const res = await basicAuthenticatedFetch(base)
+  const res = await authenticatedFetch(base)
   if (!res.ok) throw new Error(`Error fetching plannings: ${res.status}`)
   return res.json()
 }
 
 export async function fetchPlanning(id: number) {
-  const res = await basicAuthenticatedFetch(`${base}/${id}`)
+  const res = await authenticatedFetch(`${base}/${id}`)
   if (!res.ok) throw new Error(`Error fetching planning ${id}: ${res.status}`)
   return res.json()
 }
 
 export async function createPlanning(payload: Record<string, any>) {
-  const res = await basicAuthenticatedFetchRaw(base, {
+  const res = await authenticatedFetchRaw(base, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -28,7 +28,7 @@ export async function createPlanning(payload: Record<string, any>) {
 }
 
 export async function updatePlanning(id: number, payload: Record<string, any>) {
-  const res = await basicAuthenticatedFetchRaw(`${base}/${id}`, {
+  const res = await authenticatedFetchRaw(`${base}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -41,7 +41,7 @@ export async function updatePlanning(id: number, payload: Record<string, any>) {
 }
 
 export async function deletePlanning(id: number) {
-  const res = await basicAuthenticatedFetch(`${base}/${id}`, { method: 'DELETE' })
+  const res = await authenticatedFetch(`${base}/${id}`, { method: 'DELETE' })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(`Error deleting planning: ${res.status} ${text}`)

@@ -4,7 +4,19 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://172.16.12.219:30
 // Función para obtener el token JWT del localStorage
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null
-  return localStorage.getItem("auth-token")
+  
+  const token = localStorage.getItem("auth-token")
+  
+  // Verificar si el token existe y si ha expirado
+  if (token && isTokenExpired(token)) {
+    console.log('🕐 Token expirado - limpiando sesión')
+    localStorage.removeItem("auth-token")
+    localStorage.removeItem("auth-user")
+    document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    return null
+  }
+  
+  return token
 }
 
 // Función para hacer peticiones autenticadas al backend con JWT
@@ -99,6 +111,36 @@ function parseJwt(token: string): any {
   } catch (error) {
     console.error("Error parsing JWT:", error)
     return null
+  }
+}
+
+// Función para verificar si el token JWT ha expirado
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = parseJwt(token)
+    if (!payload || !payload.exp) {
+      return true
+    }
+    
+    // exp está en segundos, Date.now() está en milisegundos
+    const currentTime = Math.floor(Date.now() / 1000)
+    return payload.exp < currentTime
+  } catch (error) {
+    console.error("Error checking token expiration:", error)
+    return true
+  }
+}
+
+// Función para limpiar tokens expirados
+export function clearExpiredToken(): void {
+  if (typeof window === "undefined") return
+  
+  const token = getAuthToken()
+  if (token && isTokenExpired(token)) {
+    console.log('🕐 Token expirado detectado - limpiando sesión')
+    localStorage.removeItem("auth-token")
+    localStorage.removeItem("auth-user")
+    document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
   }
 }
 

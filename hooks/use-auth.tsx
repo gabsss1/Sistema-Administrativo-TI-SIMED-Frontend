@@ -2,7 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { type AuthState, signIn as authSignIn, signOut as authSignOut, getStoredUser, storeUser, getAuthToken } from "@/lib/auth"
+import { type AuthState, signIn as authSignIn, signOut as authSignOut, getStoredUser, storeUser, getAuthToken, clearExpiredToken } from "@/lib/auth"
 
 interface AuthContextType extends AuthState {
   signIn: (usuario: string, contrasena: string) => Promise<boolean>
@@ -21,6 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
+    // Limpiar tokens expirados primero
+    clearExpiredToken()
+    
     // Verificar si hay un token válido guardado
     const token = getAuthToken()
     const storedUser = getStoredUser()
@@ -40,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Si no está en la página de login, redirigir
       if (pathname !== "/login") {
+        console.log('🔒 Sin token válido - redirigiendo a login')
         router.push("/login")
       }
     }

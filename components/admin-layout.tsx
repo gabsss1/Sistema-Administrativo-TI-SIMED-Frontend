@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useAuth } from "@/hooks/use-auth"
 import { AdminSidebar } from "./admin-sidebar"
+import { NotificacionesPopover } from "./notificaciones-popover"
 import { Loader2 } from "lucide-react"
 
 interface AdminLayoutProps {
@@ -38,8 +39,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="lg:hidden h-16 flex items-center bg-background border-b border-border px-4">
           <div className="w-10"></div> {/* Espacio para el botón hamburguesa */}
           <h1 className="text-lg font-semibold flex-1 text-center">SIMED Admin Panel</h1>
-          <div className="w-10"></div> {/* Balance visual */}
+          <NotificacionesPopover />
         </div>
+        
+        {/* Header desktop */}
+        <div className="hidden lg:flex h-16 items-center justify-end bg-background border-b border-border px-8">
+          <NotificacionesPopover />
+        </div>
+        
         <main className="p-4 lg:p-8">{children}</main>
       </div>
     </div>

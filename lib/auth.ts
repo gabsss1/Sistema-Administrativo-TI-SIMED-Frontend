@@ -83,6 +83,8 @@ export interface User {
   id: string
   usuario: string
   name: string
+  nombre: string
+  apellido: string
   role: string
 }
 
@@ -164,6 +166,8 @@ export async function signIn(usuario: string, contrasena: string): Promise<User 
     // Decodificar el JWT para obtener información del usuario
     const payload = parseJwt(data.access_token)
     
+    console.log('🔍 JWT Payload completo:', payload)
+    
     if (!payload) {
       throw new Error("Invalid token")
     }
@@ -175,14 +179,44 @@ export async function signIn(usuario: string, contrasena: string): Promise<User 
       document.cookie = `auth-token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
     }
 
-    // Crear objeto de usuario compatible desde el JWT payload
-    // El payload tiene: { sub: usuario_id, usuario: "nombre", rol: "ADMIN" }
-    const user: User = {
+    // Crear objeto de usuario desde el JWT payload
+    let user: User = {
       id: payload.sub.toString(),
       usuario: payload.usuario,
-      name: payload.usuario,
+      name: payload.nombre && payload.apellido ? `${payload.nombre} ${payload.apellido}` : payload.usuario,
+      nombre: payload.nombre || '',
+      apellido: payload.apellido || '',
       role: payload.rol,
     }
+    
+    // Si el JWT no incluye nombre/apellido, obtenerlos del endpoint de perfil
+    if (!payload.nombre || !payload.apellido) {
+      try {
+        const profileResponse = await fetch(`${API_BASE_URL}/auth/profile`, {
+          headers: {
+            Authorization: `Bearer ${data.access_token}`,
+          },
+        })
+        
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json()
+          console.log('📝 Datos de perfil obtenidos:', profileData)
+          
+          user = {
+            ...user,
+            nombre: profileData.nombre || '',
+            apellido: profileData.apellido || '',
+            name: profileData.nombre && profileData.apellido 
+              ? `${profileData.nombre} ${profileData.apellido}` 
+              : payload.usuario,
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ No se pudo obtener el perfil completo')
+      }
+    }
+    
+    console.log('👤 User object final:', user)
 
     return user
   } catch (error) {
@@ -199,6 +233,32 @@ export async function signOut(): Promise<void> {
     localStorage.removeItem("auth-user")
     // Eliminar cookie
     document.cookie = "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+  }
+}
+
+// Función para obtener el usuario desde el token actual
+export async function getUserFromToken(): Promise<User | null> {
+  try {
+    const token = getAuthToken()
+    if (!token) return null
+    
+    const payload = parseJwt(token)
+    if (!payload) return null
+    
+    // Crear objeto de usuario desde el JWT payload
+    const user: User = {
+      id: payload.sub.toString(),
+      usuario: payload.usuario,
+      name: payload.nombre && payload.apellido ? `${payload.nombre} ${payload.apellido}` : payload.usuario,
+      nombre: payload.nombre || '',
+      apellido: payload.apellido || '',
+      role: payload.rol,
+    }
+    
+    return user
+  } catch (error) {
+    console.error("Error obteniendo usuario del token:", error)
+    return null
   }
 }
 

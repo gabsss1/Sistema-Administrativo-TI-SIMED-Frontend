@@ -19,13 +19,11 @@ import { Loader2 } from "lucide-react"
 import { 
     type CreateGuardiaDto, 
     type Guardia,
+    type Usuario,
     createGuardia, 
-    updateGuardia
+    updateGuardia,
+    getUsuarios
 } from "@/lib/guardias"
-import { 
-    type Responsable,
-    getResponsables
-} from "@/lib/registro-base-ti"
 
 interface GuardiaDialogProps {
     open: boolean
@@ -41,29 +39,29 @@ const initialFormData = {
     fecha_fin: "",
     estado: "asignada" as "asignada" | "completada" | "cancelada",
     observaciones: "",
-    responsable_id: "",
+    usuario_id: "", // Cambio de responsable_id a usuario_id
 }
 
 export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, onGuardiaSaved }: GuardiaDialogProps) {
     const [loading, setLoading] = useState(false)
     const [loadingData, setLoadingData] = useState(false)
     
-    const [responsables, setResponsables] = useState<Responsable[]>([])
+    const [usuarios, setUsuarios] = useState<Usuario[]>([]) // Cambio de responsables a usuarios
     const [formData, setFormData] = useState(initialFormData)
 
-    // Cargar responsables cuando se abre el diálogo
+    // Cargar usuarios cuando se abre el diálogo
     useEffect(() => {
         if (open) {
             const loadData = async () => {
                 setLoadingData(true)
                 try {
-                    const responsablesData = await getResponsables()
-                    setResponsables(responsablesData)
+                    const usuariosData = await getUsuarios()
+                    setUsuarios(usuariosData)
                 } catch (error) {
-                    console.error("Error loading responsables:", error)
+                    console.error("Error loading usuarios:", error)
                     Swal.fire({
-                        title: 'Error al cargar responsables',
-                        text: 'No se pudieron cargar los responsables. Inténtalo de nuevo.',
+                        title: 'Error al cargar usuarios',
+                        text: 'No se pudieron cargar los usuarios. Inténtalo de nuevo.',
                         icon: 'error',
                         confirmButtonText: 'Entendido'
                     })
@@ -79,7 +77,7 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
     useEffect(() => {
         if (guardia) {
             // Para editar: solo configurar la fecha única y datos existentes
-            const responsableId = guardia.responsable?.responsable_id?.toString() || "";
+            const usuarioId = guardia.usuario?.usuario_id?.toString() || "";
             
             // Asegurar que la fecha se mantenga en formato YYYY-MM-DD sin conversiones de zona horaria
             let fechaCorregida = guardia.fecha;
@@ -99,7 +97,7 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                 fecha_original: guardia.fecha,
                 fecha_corregida: fechaCorregida,
                 estado: guardia.estado,
-                responsable: guardia.responsable?.nombre
+                usuario: guardia.usuario?.nombre + ' ' + guardia.usuario?.apellido
             });
             
             setFormData({
@@ -108,7 +106,7 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                 fecha_fin: "",    // No necesario en modo edición
                 estado: guardia.estado,
                 observaciones: guardia.observaciones || "",
-                responsable_id: responsableId,
+                usuario_id: usuarioId, // Cambio de responsable_id a usuario_id
             })
         } else {
             // Para nueva guardia, usar la fecha seleccionada como base
@@ -146,12 +144,14 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                     fecha: fechaConHora, // Enviar con hora para evitar problema de zona horaria
                     estado: formData.estado,
                     observaciones: formData.observaciones || undefined,
-                    responsable_id: parseInt(formData.responsable_id),
+                    usuario_id: parseInt(formData.usuario_id), // Cambio de responsable_id a usuario_id
                 }
                 
                 console.log('Actualizando guardia con datos (con hora):', dataToSend);
                 
-                await updateGuardia(guardia.guardia_id, dataToSend)
+                // Pasar el usuario_id anterior para notificar si cambió
+                const usuarioAnteriorId = guardia.usuario?.usuario_id
+                await updateGuardia(guardia.guardia_id, dataToSend, usuarioAnteriorId)
             } else {
                 // Para creación: usar fecha inicio y fin (sin zona horaria para evitar cambios de día)
                 const fechaInicioISO = `${formData.fecha_inicio}T12:00:00`;
@@ -163,7 +163,7 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                     fecha_fin: fechaFinISO,
                     estado: formData.estado,
                     observaciones: formData.observaciones || undefined,
-                    responsable_id: parseInt(formData.responsable_id),
+                    usuario_id: parseInt(formData.usuario_id), // Cambio de responsable_id a usuario_id
                 }
                 
                 console.log('Creando guardia con fechas:', {
@@ -242,10 +242,10 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                                 </div>
                             </div>
                             
-                            {guardia?.responsable && (
+                            {guardia?.usuario && (
                                 <div className="mt-2 pt-2 border-t border-slate-200">
-                                    <p className="text-xs text-slate-500">Responsable actual</p>
-                                    <p className="text-sm font-medium text-slate-800">{guardia.responsable.nombre}</p>
+                                    <p className="text-xs text-slate-500">Usuario asignado actualmente</p>
+                                    <p className="text-sm font-medium text-slate-800">{guardia.usuario.nombre} {guardia.usuario.apellido}</p>
                                 </div>
                             )}
                         </div>
@@ -305,19 +305,19 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                             </div>
                         )}
                         <div className="grid gap-2">
-                            <Label htmlFor="responsable_id">Responsable</Label>
+                            <Label htmlFor="usuario_id">Usuario</Label>
                             <Select
-                                value={formData.responsable_id || undefined}
-                                onValueChange={(value) => handleInputChange("responsable_id", value)}
+                                value={formData.usuario_id || undefined}
+                                onValueChange={(value) => handleInputChange("usuario_id", value)}
                                 disabled={loadingData}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Responsable"} />
+                                    <SelectValue placeholder={loadingData ? "Cargando..." : "Seleccionar Usuario"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {responsables.map((responsable) => (
-                                        <SelectItem key={responsable.responsable_id} value={responsable.responsable_id.toString()}>
-                                            {responsable.nombre}
+                                    {usuarios.map((usuario) => (
+                                        <SelectItem key={usuario.usuario_id} value={usuario.usuario_id.toString()}>
+                                            {usuario.nombre} {usuario.apellido}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -339,15 +339,32 @@ export function GuardiaDialog({ open, onOpenChange, guardia, fechaSeleccionada, 
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="observaciones">Observaciones</Label>
-                            <Input
-                                id="observaciones"
-                                value={formData.observaciones}
-                                onChange={(e) => handleInputChange("observaciones", e.target.value)}
-                                placeholder="Observaciones (opcional)"
-                            />
-                        </div>
+                        {formData.estado === 'completada' && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="observaciones">Observaciones *</Label>
+                                <textarea
+                                    id="observaciones"
+                                    value={formData.observaciones}
+                                    onChange={(e) => handleInputChange("observaciones", e.target.value)}
+                                    placeholder="Las observaciones son obligatorias para guardias completadas"
+                                    className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    required
+                                />
+                            </div>
+                        )}
+                        {formData.estado === 'cancelada' && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="observaciones">Motivo de Cancelación *</Label>
+                                <textarea
+                                    id="observaciones"
+                                    value={formData.observaciones}
+                                    onChange={(e) => handleInputChange("observaciones", e.target.value)}
+                                    placeholder="El motivo de cancelación es obligatorio"
+                                    className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    required
+                                />
+                            </div>
+                        )}
                     </div>
                     <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0 mt-6">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="sm:mr-2">

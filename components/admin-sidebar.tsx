@@ -2,9 +2,11 @@
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/use-auth"
+import { useNotificaciones } from "@/hooks/use-notificaciones"
 
-import { LayoutDashboard, Database, Calendar, Menu, X, Cast, File, Monitor, Computer, LogOut, User } from "lucide-react"
+import { LayoutDashboard, Database, Calendar, Menu, X, Cast, File, Monitor, Computer, LogOut, User, Bell } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -15,6 +17,11 @@ const navigation = [
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    name: "Notificaciones",
+    href: "/notificaciones",
+    icon: Bell,
   },
   {
     name: "Registro Base TI",
@@ -41,6 +48,7 @@ const navigation = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { user, signOut } = useAuth()
+  const { contador } = useNotificaciones()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
@@ -85,6 +93,7 @@ export function AdminSidebar() {
             {navigation.map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon
+              const isNotificaciones = item.href === "/notificaciones"
 
               return (
                 <Link
@@ -92,7 +101,7 @@ export function AdminSidebar() {
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -100,6 +109,14 @@ export function AdminSidebar() {
                 >
                   <Icon className="h-4 w-4" />
                   {item.name}
+                  {isNotificaciones && contador > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="ml-auto h-5 min-w-[22px] px-2 flex items-center justify-center text-[11px] font-semibold text-white"
+                    >
+                      {contador > 9 ? "9+" : contador}
+                    </Badge>
+                  )}
                 </Link>
               )
             })}
@@ -113,10 +130,12 @@ export function AdminSidebar() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">
-                  {user?.name || user?.usuario}
+                  {user?.nombre && user?.apellido 
+                    ? `${user.nombre} ${user.apellido}` 
+                    : user?.name || user?.usuario || 'Usuario'}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate">
-                  {user?.role === 'ADMIN' ? 'Administrador' : user?.role === 'USER' ? 'Usuario' : user?.role}
+                  {user?.role === 'ADMIN' ? 'Administrador' : user?.role === 'USER' ? 'Usuario' : user?.role || 'Usuario'}
                 </p>
               </div>
             </div>

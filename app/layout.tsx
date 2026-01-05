@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { AuthProvider } from "@/hooks/use-auth"
 import { PreloadResources } from "@/components/preload-resources"
+import { ToastProvider } from "@/components/toast-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -23,8 +24,10 @@ export default function RootLayout({
   <html lang="es">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <AuthProvider>
-          <PreloadResources />
-          <Suspense fallback={null}>{children}</Suspense>
+          <ToastProvider>
+            <PreloadResources />
+            <Suspense fallback={null}>{children}</Suspense>
+          </ToastProvider>
         </AuthProvider>
         <Analytics />
       </body>

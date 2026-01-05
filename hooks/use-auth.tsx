@@ -29,11 +29,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = getStoredUser()
 
     if (token && storedUser) {
-      setState({
-        user: storedUser,
-        isLoading: false,
-        isAuthenticated: true,
-      })
+      // Si el usuario no tiene nombre/apellido, obtenerlos del servidor
+      if (!storedUser.nombre || !storedUser.apellido) {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://172.16.12.219:3001"
+        fetch(`${API_BASE_URL}/auth/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then(res => res.ok ? res.json() : null)
+          .then(profileData => {
+            if (profileData && profileData.nombre && profileData.apellido) {
+              const updatedUser = {
+                ...storedUser,
+                nombre: profileData.nombre,
+                apellido: profileData.apellido,
+                name: `${profileData.nombre} ${profileData.apellido}`,
+              }
+              storeUser(updatedUser)
+              setState({
+                user: updatedUser,
+                isLoading: false,
+                isAuthenticated: true,
+              })
+            } else {
+              setState({
+                user: storedUser,
+                isLoading: false,
+                isAuthenticated: true,
+              })
+            }
+          })
+          .catch(() => {
+            setState({
+              user: storedUser,
+              isLoading: false,
+              isAuthenticated: true,
+            })
+          })
+      } else {
+        setState({
+          user: storedUser,
+          isLoading: false,
+          isAuthenticated: true,
+        })
+      }
     } else {
       setState({
         user: null,

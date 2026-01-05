@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Edit, Trash2 } from "lucide-react";
+import { Plus, Download, Edit, Trash2, Bell } from "lucide-react";
 import Swal from 'sweetalert2';
 import { 
   type Guardia, 
@@ -54,6 +54,13 @@ export default function CalendarioGuardias() {
 
   useEffect(() => {
     loadGuardias();
+    
+    // Polling cada 30 segundos para auto-actualizar guardias
+    const interval = setInterval(() => {
+      loadGuardias();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [year, month]);
 
   const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -80,7 +87,7 @@ export default function CalendarioGuardias() {
     
     const result = await Swal.fire({
       title: '¿Estás seguro?',
-      text: `¿Deseas eliminar la guardia de 24h de ${guardia.responsable?.nombre} el ${guardia.fecha}?`,
+      text: `¿Deseas eliminar la guardia de 24h de ${guardia.usuario?.nombre} el ${guardia.fecha}?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -312,7 +319,7 @@ export default function CalendarioGuardias() {
                                   ? 'text-blue-800'
                                   : 'text-red-800'
                               }`}>
-                                {g.responsable?.nombre}
+                                {g.usuario?.nombre} {g.usuario?.apellido}
                               </p>
                               <p className={`text-xs ${
                                 g.estado === 'completada' 
@@ -324,10 +331,17 @@ export default function CalendarioGuardias() {
                                 Guardia 24hrs • {g.estado.charAt(0).toUpperCase() + g.estado.slice(1)}
                               </p>
                             </div>
-                            <div className={`w-3 h-3 rounded-full ${
-                              g.estado === 'completada' ? 'bg-green-500' : 
-                              g.estado === 'asignada' ? 'bg-blue-500' : 'bg-red-500'
-                            }`}></div>
+                            {/* Campanita roja si está completada sin observaciones */}
+                            {g.estado === 'completada' && !g.observaciones ? (
+                              <div className="bg-red-500 text-white p-1.5 rounded-full animate-pulse" title="Falta completar observaciones">
+                                <Bell className="h-4 w-4" />
+                              </div>
+                            ) : (
+                              <div className={`w-3 h-3 rounded-full ${
+                                g.estado === 'completada' ? 'bg-green-500' : 
+                                g.estado === 'asignada' ? 'bg-blue-500' : 'bg-red-500'
+                              }`}></div>
+                            )}
                           </div>
                           <div className="flex gap-2">
                             <button 
@@ -418,11 +432,19 @@ export default function CalendarioGuardias() {
                       }`}>
                         {celda.day}
                       </span>
-                      {celda.guardias.length > 1 && (
-                        <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full">
-                          +{celda.guardias.length - 1}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {/* Campanita roja si la guardia está completada sin observaciones */}
+                        {guardiaPrincipal && guardiaPrincipal.estado === 'completada' && !guardiaPrincipal.observaciones && (
+                          <div className="bg-red-500 text-white p-1 rounded-full animate-pulse" title="Falta completar observaciones">
+                            <Bell className="h-3 w-3" />
+                          </div>
+                        )}
+                        {celda.guardias.length > 1 && (
+                          <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full">
+                            +{celda.guardias.length - 1}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Información de la guardia */}
@@ -430,7 +452,7 @@ export default function CalendarioGuardias() {
                       <div className="flex-1 flex flex-col justify-center">
                         <div className="text-center">
                           <p className={`font-semibold text-sm leading-tight ${textColor}`}>
-                            {guardiaPrincipal.responsable?.nombre || 'Sin asignar'}
+                            {guardiaPrincipal.usuario?.nombre || 'Sin asignar'} {guardiaPrincipal.usuario?.apellido || ''}
                           </p>
                           <p className={`text-xs mt-1 ${textColor.replace('800', '600')}`}>
                             Guardia {guardiaPrincipal.estado}

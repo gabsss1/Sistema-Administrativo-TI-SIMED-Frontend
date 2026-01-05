@@ -23,10 +23,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { type Usuario, getUsuarios } from '@/lib/guardias'
 import { 
-  type Responsable,
   type Hospital,
-  getResponsables,
   getHospitales
 } from '@/lib/registro-base-ti'
 
@@ -37,7 +36,14 @@ type PlanningItem = {
   hora_fin: string
   titulo: string
   descripcion?: string
-  responsable?: any
+  estado?: 'asignada' | 'completada' | 'cancelada'
+  observaciones?: string
+  motivo_cancelacion?: string
+  usuario?: {
+    usuario_id: number
+    nombre: string
+    apellido: string
+  }
   hospital?: any
 }
 
@@ -142,9 +148,9 @@ export default function PlanningCalendar() {
   const [editingItem, setEditingItem] = useState<PlanningItem | null>(null)
   const [loadingData, setLoadingData] = useState(false)
 
-  const [responsables, setResponsables] = useState<Responsable[]>([])
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [hospitales, setHospitales] = useState<Hospital[]>([])
-  const [searchResponsable, setSearchResponsable] = useState("")
+  const [searchUsuario, setSearchUsuario] = useState("")
   const [searchHospital, setSearchHospital] = useState("")
 
   const [form, setForm] = useState({
@@ -153,7 +159,10 @@ export default function PlanningCalendar() {
     hora_fin: '08:00',
     titulo: '',
     descripcion: '',
-    responsable_id: '',
+    estado: 'asignada' as 'asignada' | 'completada' | 'cancelada',
+    observaciones: '',
+    motivo_cancelacion: '',
+    usuario_id: '',
     hospital_id: ''
   })
 
@@ -187,19 +196,26 @@ export default function PlanningCalendar() {
 
   useEffect(() => {
     loadItems()
+    
+    // Polling cada 30 segundos para auto-actualizar planning
+    const interval = setInterval(() => {
+      loadItems()
+    }, 30000)
+
+    return () => clearInterval(interval)
   }, [])
 
-  // Cargar responsables y hospitales cuando se abre el diálogo
+  // Cargar usuarios y hospitales cuando se abre el diálogo
   useEffect(() => {
     if (dialogOpen) {
-      const loadData = async () => {
+      (async () => {
         setLoadingData(true)
         try {
-          const [responsablesData, hospitalesData] = await Promise.all([
-            getResponsables(),
+          const [usuariosData, hospitalesData] = await Promise.all([
+            getUsuarios(),
             getHospitales()
           ])
-          setResponsables(responsablesData)
+          setUsuarios(usuariosData)
           setHospitales(hospitalesData)
         } catch (error) {
           console.error("Error loading data:", error)
@@ -212,8 +228,7 @@ export default function PlanningCalendar() {
         } finally {
           setLoadingData(false)
         }
-      }
-      loadData()
+      })()
     }
   }, [dialogOpen])
 
@@ -225,7 +240,10 @@ export default function PlanningCalendar() {
       hora_fin: '08:00',
       titulo: '',
       descripcion: '',
-      responsable_id: '',
+      estado: 'asignada',
+      observaciones: '',
+      motivo_cancelacion: '',
+      usuario_id: '',
       hospital_id: ''
     })
     setDialogOpen(true)
@@ -239,7 +257,10 @@ export default function PlanningCalendar() {
       hora_fin: item.hora_fin,
       titulo: item.titulo,
       descripcion: item.descripcion || '',
-      responsable_id: item.responsable?.responsable_id?.toString() || '',
+      estado: item.estado || 'asignada',
+      observaciones: item.observaciones || '',
+      motivo_cancelacion: item.motivo_cancelacion || '',
+      usuario_id: item.usuario?.usuario_id?.toString() || '',
       hospital_id: item.hospital?.hospital_id?.toString() || ''
     })
     setDialogOpen(true)
@@ -279,6 +300,17 @@ export default function PlanningCalendar() {
       return
     }
 
+    // Validar observaciones según estado
+    if (form.estado === 'completada' && !form.observaciones?.trim()) {
+      Swal.fire('Error', 'Las observaciones son obligatorias cuando el estado es "Completada"', 'error')
+      return
+    }
+
+    if (form.estado === 'cancelada' && !form.motivo_cancelacion?.trim()) {
+      Swal.fire('Error', 'El motivo de cancelación es obligatorio cuando el estado es "Cancelada"', 'error')
+      return
+    }
+
     setOperationLoading(true)
     try {
       const payload = {
@@ -287,12 +319,16 @@ export default function PlanningCalendar() {
         hora_fin: form.hora_fin,
         titulo: form.titulo,
         descripcion: form.descripcion,
-        responsable_id: form.responsable_id ? parseInt(form.responsable_id) : undefined,
+        estado: form.estado,
+        observaciones: form.observaciones || undefined,
+        motivo_cancelacion: form.motivo_cancelacion || undefined,
+        usuario_id: form.usuario_id ? parseInt(form.usuario_id) : undefined,
         hospital_id: form.hospital_id ? parseInt(form.hospital_id) : undefined
       }
 
       if (editingItem) {
-        await planningApi.updatePlanning(editingItem.planning_id, payload)
+        const usuarioAnteriorId = editingItem.usuario?.usuario_id
+        await planningApi.updatePlanning(editingItem.planning_id, payload, usuarioAnteriorId)
       } else {
         await planningApi.createPlanning(payload)
       }
@@ -520,10 +556,18 @@ export default function PlanningCalendar() {
                         const widthPercent = 100 / overlapCount
                         const leftPercent = (100 / overlapCount) * currentIndex
 
+                        // Colores según estado
+                        const estadoColors = {
+                          asignada: 'border-blue-500 bg-blue-50/90 hover:bg-blue-100',
+                          completada: 'border-green-500 bg-green-50/90 hover:bg-green-100',
+                          cancelada: 'border-gray-400 bg-gray-50/90 hover:bg-gray-100'
+                        }
+                        const colorClass = estadoColors[ev.estado || 'asignada']
+
                         return (
                           <div
                             key={`${ev.planning_id}-${pidx}`}
-                            className="absolute border-l-4 border-blue-500 bg-blue-50/90 hover:bg-blue-100 cursor-pointer transition-colors group px-1.5 py-1"
+                            className={`absolute border-l-4 cursor-pointer transition-colors group px-1.5 py-1 ${colorClass}`}
                             style={{
                               top: `${topPx}px`,
                               height: `${heightPx}px`,
@@ -537,9 +581,16 @@ export default function PlanningCalendar() {
                               <div className="text-gray-700 text-xs">
                                 {ev.hora_inicio} - {ev.hora_fin}
                               </div>
-                              {ev.responsable?.nombre && (
+                              {ev.estado && ev.estado !== 'asignada' && (
+                                <div className={`text-[10px] font-medium mt-0.5 ${
+                                  ev.estado === 'completada' ? 'text-green-700' : 'text-gray-600'
+                                }`}>
+                                  {ev.estado === 'completada' ? '✓ Completada' : '✕ Cancelada'}
+                                </div>
+                              )}
+                              {ev.usuario?.nombre && (
                                 <div className="text-gray-600 text-xs truncate">
-                                  {ev.responsable.nombre}
+                                  {ev.usuario.nombre}
                                 </div>
                               )}
                               {ev.hospital?.hospital_nombre && (
@@ -642,10 +693,18 @@ export default function PlanningCalendar() {
                         const widthPercent = 100 / totalOverlapping
                         const leftPercent = widthPercent * evIndex
 
+                        // Colores según estado
+                        const estadoColors = {
+                          asignada: 'border-blue-500 bg-blue-50/90 hover:bg-blue-100',
+                          completada: 'border-green-500 bg-green-50/90 hover:bg-green-100',
+                          cancelada: 'border-gray-400 bg-gray-50/90 hover:bg-gray-100'
+                        }
+                        const colorClass = estadoColors[ev.estado || 'asignada']
+
                         return (
                           <div
                             key={`${ev.planning_id}-${i}`}
-                            className="absolute border-l-4 border-blue-500 bg-blue-50/90 hover:bg-blue-100 cursor-pointer transition-colors group px-1.5 py-1"
+                            className={`absolute border-l-4 cursor-pointer transition-colors group px-1.5 py-1 ${colorClass}`}
                             style={{
                               top: `${topPx}px`,
                               height: `${heightPx}px`,
@@ -659,9 +718,16 @@ export default function PlanningCalendar() {
                               <div className="text-gray-700 text-xs">
                                 {ev.hora_inicio} - {ev.hora_fin}
                               </div>
-                              {ev.responsable?.nombre && (
+                              {ev.estado && ev.estado !== 'asignada' && (
+                                <div className={`text-[10px] font-medium mt-0.5 ${
+                                  ev.estado === 'completada' ? 'text-green-700' : 'text-gray-600'
+                                }`}>
+                                  {ev.estado === 'completada' ? '✓ Completada' : '✕ Cancelada'}
+                                </div>
+                              )}
+                              {ev.usuario?.nombre && (
                                 <div className="text-gray-600 text-xs truncate">
-                                  {ev.responsable.nombre}
+                                  {ev.usuario.nombre}
                                 </div>
                               )}
                               {ev.hospital?.hospital_nombre && (
@@ -746,7 +812,58 @@ export default function PlanningCalendar() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="responsable_id">Responsable</Label>
+              <Label htmlFor="estado">Estado</Label>
+              <select
+                id="estado"
+                value={form.estado}
+                onChange={(e) => setForm({ ...form, estado: e.target.value as 'asignada' | 'completada' | 'cancelada' })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="asignada">Asignada</option>
+                <option value="completada">Completada</option>
+                <option value="cancelada">Cancelada</option>
+              </select>
+            </div>
+            {form.estado === 'completada' && (
+              <div className="grid gap-2">
+                <Label htmlFor="observaciones">Observaciones *</Label>
+                <textarea
+                  id="observaciones"
+                  value={form.observaciones}
+                  onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
+                  placeholder="Las observaciones son obligatorias para eventos completados"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                />
+              </div>
+            )}
+            {form.estado === 'cancelada' && (
+              <div className="grid gap-2">
+                <Label htmlFor="motivo_cancelacion">Motivo de Cancelación *</Label>
+                <textarea
+                  id="motivo_cancelacion"
+                  value={form.motivo_cancelacion}
+                  onChange={(e) => setForm({ ...form, motivo_cancelacion: e.target.value })}
+                  placeholder="El motivo de cancelación es obligatorio"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                />
+              </div>
+            )}
+            {form.estado === 'asignada' && form.observaciones && (
+              <div className="grid gap-2">
+                <Label htmlFor="observaciones">Observaciones</Label>
+                <textarea
+                  id="observaciones"
+                  value={form.observaciones}
+                  onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
+                  placeholder="Observaciones opcionales"
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+            )}
+            <div className="grid gap-2">
+              <Label htmlFor="usuario_id">Usuario</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -755,37 +872,37 @@ export default function PlanningCalendar() {
                       className="w-full justify-between"
                       disabled={loadingData}
                     >
-                      {form.responsable_id
-                        ? responsables.find(r => r.responsable_id.toString() === form.responsable_id)?.nombre
-                        : (loadingData ? "Cargando..." : "Seleccionar Responsable")}
+                      {form.usuario_id
+                        ? usuarios.find(u => u.usuario_id.toString() === form.usuario_id)?.nombre + ' ' + usuarios.find(u => u.usuario_id.toString() === form.usuario_id)?.apellido
+                        : (loadingData ? "Cargando..." : "Seleccionar Usuario")}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="p-0 w-[min(90vw,400px)] max-h-[60vh] overflow-y-auto z-50">
                     <Command className="w-full">
                       <div className="sticky top-0 bg-white z-10 p-2">
-                        <CommandInput placeholder="Buscar responsable..." value={searchResponsable} onValueChange={setSearchResponsable} />
+                        <CommandInput placeholder="Buscar usuario..." value={searchUsuario} onValueChange={setSearchUsuario} />
                       </div>
                       <CommandList className="max-h-[45vh] overflow-y-auto">
                         <CommandEmpty>No se encontraron resultados.</CommandEmpty>
                         <CommandGroup>
-                          {responsables
-                            .filter(r => !searchResponsable || r.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(searchResponsable.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
-                            .map(responsable => (
+                          {usuarios
+                            .filter(u => !searchUsuario || (u.nombre + ' ' + u.apellido).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(searchUsuario.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
+                            .map(usuario => (
                               <CommandItem
-                                key={responsable.responsable_id}
-                                value={responsable.nombre}
-                                onSelect={() => setForm({ ...form, responsable_id: responsable.responsable_id.toString() })}
+                                key={usuario.usuario_id}
+                                value={usuario.nombre + ' ' + usuario.apellido}
+                                onSelect={() => setForm({ ...form, usuario_id: usuario.usuario_id.toString() })}
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    form.responsable_id === responsable.responsable_id.toString()
+                                    form.usuario_id === usuario.usuario_id.toString()
                                       ? "opacity-100"
                                       : "opacity-0"
                                   )}
                                 />
-                                {responsable.nombre}
+                                {usuario.nombre} {usuario.apellido}
                               </CommandItem>
                             ))}
                         </CommandGroup>

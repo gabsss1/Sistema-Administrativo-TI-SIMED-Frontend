@@ -1,4 +1,14 @@
-import { authenticatedFetch } from "./auth"
+import { authenticatedFetch, getUserFromToken } from "./auth"
+import { crearNotificacion } from "./notificaciones"
+
+// Interfaz para Usuario (basado en la entidad de NestJS)
+export interface Usuario {
+  usuario_id: number
+  usuario: string
+  nombre: string
+  apellido: string
+  rol: string
+}
 
 // Interfaces para Guardias
 export interface Guardia {
@@ -8,10 +18,11 @@ export interface Guardia {
   fecha_fin?: string    // Opcional, se calcula en frontend
   estado: "asignada" | "completada" | "cancelada"
   observaciones?: string | null
-  responsable_id?: number // Opcional porque viene dentro del objeto responsable
-  responsable?: {
-    responsable_id: number
+  usuario_id?: number // Opcional porque viene dentro del objeto usuario
+  usuario?: {
+    usuario_id: number
     nombre: string
+    apellido: string
   }
   created_at?: string
   updated_at?: string
@@ -23,10 +34,17 @@ export interface CreateGuardiaDto {
   fecha_fin: string
   estado?: "asignada" | "completada" | "cancelada"
   observaciones?: string
-  responsable_id: number
+  usuario_id: number // Cambio de responsable_id a usuario_id
 }
 
 export interface UpdateGuardiaDto extends Partial<CreateGuardiaDto> {}
+
+// Función para obtener todos los usuarios
+export async function getUsuarios(): Promise<Usuario[]> {
+  const response = await authenticatedFetch("/auth/users")
+  if (!response.ok) throw new Error("Error al obtener usuarios")
+  return response.json()
+}
 
 // API Functions para Guardias
 export async function getGuardias() {
@@ -51,7 +69,6 @@ export async function getGuardiasPorCalendario(year: number, month: number): Pro
     }
     
     const data = await response.json();
-    console.log('✅ Guardias cargadas:', data.length, 'guardias encontradas');
     return data;
     
   } catch (error) {
@@ -75,16 +92,75 @@ export async function createGuardia(guardiaData: CreateGuardiaDto) {
     body: JSON.stringify(guardiaData),
   })
   if (!response.ok) throw new Error("Error creating guardia")
-  return response.json()
+  
+  const nuevaGuardia = await response.json()
+  
+  // Crear notificación para el usuario asignado
+  if (guardiaData.usuario_id) {
+    const fechaInicio = new Date(guardiaData.fecha_inicio).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    const fechaFin = new Date(guardiaData.fecha_fin).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    
+    const mensaje = `Se te ha asignado una nueva guardia del ${fechaInicio} al ${fechaFin}`
+    
+    // Obtener el usuario que está asignando
+    const usuarioActual = await getUserFromToken()
+    const usuarioAsignadoPorId = usuarioActual?.id ? parseInt(usuarioActual.id) : undefined
+    
+    await crearNotificacion(mensaje, guardiaData.usuario_id, usuarioAsignadoPorId)
+  }
+  
+  return nuevaGuardia
 }
 
-export async function updateGuardia(id: number, guardiaData: UpdateGuardiaDto) {
+export async function updateGuardia(id: number, guardiaData: UpdateGuardiaDto, usuarioAnteriorId?: number) {
   const response = await authenticatedFetch(`/guardia/${id}`, {
     method: "PUT",
     body: JSON.stringify(guardiaData),
   })
   if (!response.ok) throw new Error("Error updating guardia")
-  return response.json()
+  
+  const guardiaActualizada = await response.json()
+  
+  // El backend ya maneja las notificaciones automáticamente cuando se cambia el usuario
+  // Solo notificamos si se actualizó la guardia sin cambiar usuario y hay fechas
+  if (guardiaData.usuario_id && (!usuarioAnteriorId || guardiaData.usuario_id === usuarioAnteriorId) && guardiaData.fecha_inicio && guardiaData.fecha_fin) {
+    const fechaInicio = new Date(guardiaData.fecha_inicio).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    const fechaFin = new Date(guardiaData.fecha_fin).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    
+    const mensaje = `Tu guardia ha sido actualizada: ${fechaInicio} al ${fechaFin}`
+    
+    // Obtener el usuario que está actualizando
+    const usuarioActual = await getUserFromToken()
+    const usuarioAsignadoPorId = usuarioActual?.id ? parseInt(usuarioActual.id) : undefined
+    
+    await crearNotificacion(mensaje, guardiaData.usuario_id, usuarioAsignadoPorId)
+  }
+  
+  return guardiaActualizada
 }
 
 export async function deleteGuardia(id: number) {
@@ -136,7 +212,7 @@ export interface EstadisticasBackend {
 
 // Estructura adaptada para el componente
 export interface EstadisticasResponsable {
-  responsable_id?: number
+  usuario_id?: number // Cambio de responsable_id a usuario_id
   nombre: string
   total_guardias: number
   guardias_completadas?: number

@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/use-auth"
 import { PreloadResources } from "@/components/preload-resources"
 import { ToastProvider } from "@/components/toast-provider"
 import "./globals.css"
+import "./leaflet.css"
 
 export const metadata: Metadata = {
   title: "FAST-IT",

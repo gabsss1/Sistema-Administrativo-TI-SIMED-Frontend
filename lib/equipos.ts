@@ -29,6 +29,29 @@ export interface Equipo {
   fecha_conclusion?: Date
   observaciones?: string
   estado_equipo: EstadoEquipo
+  latitud?: number
+  longitud?: number
+  altitud?: number
+  direccion_fisica?: string
+}
+
+export interface UbicacionEquipo {
+  equipo_id: number
+  latitud?: number
+  longitud?: number
+  altitud?: number
+  direccion_fisica?: string
+  tipo_equipo: TipoEquipo
+  marca_equipo: string
+  modelo_equipo: string
+  numero_serie_equipo: string
+}
+
+export interface UpdateUbicacionEquipoData {
+  latitud: number
+  longitud: number
+  altitud?: number
+  direccion_fisica?: string
 }
 
 export interface CreateEquipoData {
@@ -133,6 +156,41 @@ export async function deleteEquipo(id: number): Promise<void> {
     }
   } catch (error) {
     console.error('Error deleting equipo:', error)
+    throw error
+  }
+}
+
+export async function getUbicacionEquipo(id: number): Promise<UbicacionEquipo> {
+  try {
+    const response = await authenticatedFetch(`/equipos/${id}/ubicacion`)
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching ubicacion equipo:', error)
+    throw error
+  }
+}
+
+export async function updateUbicacionEquipo(id: number, data: UpdateUbicacionEquipoData): Promise<Equipo> {
+  try {
+    const response = await authenticatedFetch(`/equipos/${id}/ubicacion`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error updating ubicacion equipo:', error)
     throw error
   }
 }

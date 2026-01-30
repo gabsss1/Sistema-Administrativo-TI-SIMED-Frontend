@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Computer, Mouse, Keyboard } from "lucide-react"
+import { MoreHorizontal, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Computer, Mouse, Keyboard, MapPin } from "lucide-react"
 import { 
     type Equipo,
     getEquiposList, 
@@ -20,6 +20,13 @@ import { useOptimizedList } from "@/hooks/use-optimized-fetch"
 // Lazy load dialog only when needed
 const EquiposDialog = lazy(() => 
   import("./equipos-dialog").then(module => ({
+    default: module.default
+  }))
+)
+
+// Lazy load ubicacion dialog
+const UbicacionEquipoDialog = lazy(() => 
+  import("./ubicacion-equipo-dialog").then(module => ({
     default: module.default
   }))
 )
@@ -48,6 +55,8 @@ export default function EquiposTable() {
     const [currentPage, setCurrentPage] = useState(1)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [selectedEquipo, setSelectedEquipo] = useState<Equipo | null>(null)
+    const [isUbicacionDialogOpen, setIsUbicacionDialogOpen] = useState(false)
+    const [equipoUbicacion, setEquipoUbicacion] = useState<{ id: number; nombre: string } | null>(null)
 
     const itemsPerPage = 10
 
@@ -171,6 +180,19 @@ export default function EquiposTable() {
 
     const handleEquipoSaved = () => {
         refetch()
+    }
+
+    const handleVerUbicacion = (equipo: Equipo) => {
+        setEquipoUbicacion({
+            id: equipo.equipo_id,
+            nombre: `${equipo.marca_equipo} ${equipo.modelo_equipo} (${equipo.numero_serie_equipo})`
+        })
+        setIsUbicacionDialogOpen(true)
+    }
+
+    const handleUbicacionDialogClose = () => {
+        setIsUbicacionDialogOpen(false)
+        setEquipoUbicacion(null)
     }
 
     const getEstadoBadgeColor = (estado: EstadoEquipo) => {
@@ -364,6 +386,13 @@ export default function EquiposTable() {
                                                         Editar
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem 
+                                                        onClick={() => handleVerUbicacion(equipo)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <MapPin className="mr-2 h-4 w-4" />
+                                                        Ubicación
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem 
                                                         onClick={() => handleDelete(equipo)}
                                                         className="cursor-pointer text-red-600"
                                                     >
@@ -419,6 +448,14 @@ export default function EquiposTable() {
                             onClose={handleDialogClose}
                             equipo={selectedEquipo}
                             onEquipoSaved={handleEquipoSaved}
+                        />
+                    )}
+                    {isUbicacionDialogOpen && equipoUbicacion && (
+                        <UbicacionEquipoDialog
+                            isOpen={isUbicacionDialogOpen}
+                            onClose={handleUbicacionDialogClose}
+                            equipoId={equipoUbicacion.id}
+                            equipoNombre={equipoUbicacion.nombre}
                         />
                     )}
                 </Suspense>

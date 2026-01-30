@@ -912,7 +912,7 @@ export default function PlanningCalendar() {
                 </Popover>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="hospital_id">Hospital</Label>
+              <Label htmlFor="hospital_id">Ubicación</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -924,7 +924,7 @@ export default function PlanningCalendar() {
                       <span className="truncate">
                         {form.hospital_id
                           ? hospitales.find(h => h.hospital_id.toString() === form.hospital_id)?.hospital_nombre
-                          : (loadingData ? "Cargando..." : "Seleccionar Hospital")}
+                          : (loadingData ? "Cargando..." : "Seleccionar Ubicación")}
                       </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -932,7 +932,7 @@ export default function PlanningCalendar() {
                   <PopoverContent className="p-0 w-[min(90vw,500px)] max-h-[60vh] overflow-y-auto z-50">
                     <Command className="w-full">
                       <div className="sticky top-0 bg-white z-10 p-2">
-                        <CommandInput placeholder="Buscar hospital..." value={searchHospital} onValueChange={setSearchHospital} />
+                        <CommandInput placeholder="Buscar ubicación..." value={searchHospital} onValueChange={setSearchHospital} />
                       </div>
                       <CommandList className="max-h-[45vh] overflow-y-auto">
                         <CommandEmpty>No se encontraron resultados.</CommandEmpty>
